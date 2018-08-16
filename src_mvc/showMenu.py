@@ -3,7 +3,7 @@
 
 class showMenu:
 
-	def menu():
+	def menu(self):
 		print('Choose one the following numbers:')
 		print('---------------------------------')
 		print('1. Read GenBank files from folder.')
@@ -12,3 +12,4 @@ class showMenu:
 		print('3. Run NMF model.')
 		print('4. Run LDA original model.')
 		print('5. Run LDA binary model.')
+		print('6. Exit')

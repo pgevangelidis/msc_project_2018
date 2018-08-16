@@ -6,12 +6,13 @@
 
 
 #### packages/libraries/ etc
-from Bio import SeqIO
+from Bio import *
 from BGC import *
 from BGC_Dictionary import *
 from LDAmodel import *
 from storeBGC import *
 from showMenu import *
+from Controller import *
 import glob
 import os.path
 import time
@@ -37,20 +38,23 @@ if __name__ == '__main__':
 	# this is the reference for the controller
 	controllerMenu = Controller()
 
-	while (!exitCondition):
+	while controllerMenu.exitCond != True :
 		
 		# show the menu to the user by using the menu() method
 		menuToString.menu()
 
-		input('Enter your input:')
+
 		flag = False
-		while(!flag):
+		while (flag!=True) :
 			try:
-				mode = int(raw_input('Input:'))
-				if(mode>0 or mode<6):
+				mode = int(raw_input('Enter your input:'))
+				if(mode>0 or mode<7):
 					flag = True
 			except ValueError:
 				print("Not a number")
 
 		# create the controller who will control the mode value
 		controllerMenu.defineMode(mode)
+
+	print('\nThank you. Good Bye.\n')
+

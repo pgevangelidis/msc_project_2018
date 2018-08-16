@@ -3,16 +3,13 @@ from BGC import *
 
 class PickleBGC:
 
-	def __init__(self):
-		return self
-
-	def storeBGC(self, bgc):
-		with open(bgc.name+'.pickle', 'wb') as f:
-			pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+	def storeBGC(self, bgc, dir):
+		with open(dir + bgc.name + '.pickle', 'wb') as f:
+			pickle.dump(bgc, f, pickle.HIGHEST_PROTOCOL)
 
 	def loadBGC(self, bgcName):
 		try:
-			with open( bgcName, 'rb') as f:
+			with open(bgcName, 'rb') as f:
 				return pickle.load(f)
-		except FileNotFoundError:
+		except:
 			print('This name does not exist.')
