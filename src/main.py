@@ -157,11 +157,11 @@ if __name__ == '__main__':
 		tm = time.gmtime(mm)
 		print('2. Computation of M - Step is done, loop: {} time: {}:{}:{}\n'.format(loop, tm.tm_hour, tm.tm_min, tm.tm_sec))
 
-		st = time.time()
-		lda.normaliseVita()
-		mm = time.time() - st
-		tm = time.gmtime(mm)
-		print('3. Normalisation of vita matrix is done, loop: {} time: {}:{}:{}\n'.format(loop, tm.tm_hour, tm.tm_min, tm.tm_sec))
+		# st = time.time()
+		# lda.normaliseVita()
+		# mm = time.time() - st
+		# tm = time.gmtime(mm)
+		# print('3. Normalisation of vita matrix is done, loop: {} time: {}:{}:{}\n'.format(loop, tm.tm_hour, tm.tm_min, tm.tm_sec))
 
 		#### Loop for the Lower Bound!
 		n=0

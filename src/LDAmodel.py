@@ -30,20 +30,9 @@ class LDA_model:
 		partC = 0.0
 		partD = 0.0
 
-		partA = scipy.special.gammaln(np.sum(self.alpha))
-		for i in range(self.alpha.shape[1]):
-			partA -= scipy.special.gammaln(self.alpha[0][i])
-			partA += (self.alpha[0][i] - 1)*(scipy.special.digamma(bgc.gamma[0][i]) - scipy.special.digamma(np.sum(bgc.gamma)))
-
-		partD = (-1)*scipy.special.gammaln(np.sum(bgc.gamma)))
-		for i in range(bgc.gamma.shape[1]):
-			partD += scipy.special.gammaln(bgc.gamma[0][i])
-			partD -= (bgc.gamma[0][i] - 1)*(scipy.special.digamma(bgc.gamma[0][i]) - scipy.special.digamma(np.sum(bgc.gamma)))
-
-		for i in range(bgc.phi.shape[0]):
-			for j in range(bgc.phi.shape[1]):
-				partBE += bgc.phi[i][j]*(scipy.special.digamma(bgc.gamma[0][j]) - scipy.special.digamma(np.sum(bgc.gamma)))
-				partBE -= bgc.phi[i][j]*(np.log(bgc.phi[i][j]))
+		partA = bgc.partA
+		partBE = bgc.partBE
+		partD = bgc.partD
 
 		n = 0
 		for gene in bgc.genes:
@@ -93,21 +82,26 @@ class LDA_model:
 		tep = np.reshape(temp, (1,temp.shape[0]))
 		bgc.gamma = self.alpha + tep
 
+		bgc.setPartA(self.alpha)
+		bgc.setPartBE()
+		bgc.setPartD()
 	##################################
 	##### M Step #####################
 	##################################
 
 	def MStep(self, bgc, dictionaries):
 
-		temp = bgc.phi.sum(axis=0)
+		# temp = bgc.phi.sum(axis=0)
 
 		n=0 # this counter is for the rows of phi matrix
 		for gene in bgc.genes:
 			row = dictionaries.geneDict[gene]
-			self.vita[row] += bgc.phi[n]/temp
+			self.vita[row] += bgc.phi[n]
+			# self.vita[row] += bgc.phi[n]/temp
 			n += 1
 
 	def normaliseVita(self):
 
 		for i in range(self.vita.shape[0]):
-			self.vita[i] = self.vita[i]/np.linalg.norm(self.vita[i])
+			# self.vita[i] = self.vita[i]/np.linalg.norm(self.vita[i])
+			self.vita[i] = self.vita[i]/np.sum(self.vita[i])

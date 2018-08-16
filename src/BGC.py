@@ -5,6 +5,7 @@
 # The class will have a method to store the genes, the definition
 # Also to check if there are genes with the same name more than once in the gene cluster
 import numpy as np
+import scipy.special
 
 class BGC:
 	# The constructor will init all the necessary variables
@@ -25,6 +26,9 @@ class BGC:
 		self.number = 0
 		self.lbound = 0.0
 		self.lbound_pre = []
+		self.partA = 0.0
+		self.partD = 0.0
+		self.partBE = 0.0
 
 	#This method append the gene to the gene Dictionary and the gene list
 	def addGene(self, g):
@@ -59,3 +63,29 @@ class BGC:
 				dGenes.append((key, self.geneDict[key]))
 
 		return dGenes
+
+	def setPartA(self, alpha):
+		self.partA = 0.0
+		self.partA = scipy.special.gammaln(np.sum(alpha))
+		for i in range(alpha.shape[1]):
+			self.partA -= scipy.special.gammaln(alpha[0][i])
+			self.partA += (alpha[0][i] - 1)*(scipy.special.digamma(self.gamma[0][i]) - scipy.special.digamma(np.sum(self.gamma)))
+
+
+
+	def setPartBE(self):
+		self.partBE = 0.0
+		for i in range(self.phi.shape[0]):
+			for j in range(self.phi.shape[1]):
+				self.partBE += self.phi[i][j]*(scipy.special.digamma(self.gamma[0][j]) - scipy.special.digamma(np.sum(self.gamma)))
+				self.partBE -= self.phi[i][j]*(np.log(self.phi[i][j]))
+
+
+
+	def setPartD(self):
+		self.partD = 0.0
+		self.partD = (-1)*scipy.special.gammaln(np.sum(self.gamma))
+		for i in range(self.gamma.shape[1]):
+			self.partD += scipy.special.gammaln(self.gamma[0][i])
+			self.partD -= (self.gamma[0][i] - 1)*(scipy.special.digamma(self.gamma[0][i]) - scipy.special.digamma(np.sum(self.gamma)))
+
