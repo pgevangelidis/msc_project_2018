@@ -9,12 +9,14 @@ import copy
 class LDA_iterator:
 
 	def __init__(self, geneDict):
-		self.iteration = 10 # I have picked 100 iteration hoping the LDA will merge before them
+		self.iteration = 60 # I have picked 100 iteration hoping the LDA will merge before them
 		self.error = 0.01
 		self.errorFlag = False
 		self.loop = 0
 		self.step = ""
 		self.size = geneDict
+		self.lda = LDA_model(self.size)
+		self.saveBGC = store_BGC()
 
 	def time_status(self, loop, hour, min, sec, s):
 		if(s==1):
@@ -28,8 +30,7 @@ class LDA_iterator:
 
 
 	def iterator(self, bgcList, dictionaries):
-		lda = LDA_model(self.size)
-		saveBGC = store_BGC()
+		
 
 		####### Timer counter
 		start_time = time.time()
@@ -41,8 +42,7 @@ class LDA_iterator:
 			print('****** Computation of E - Step ******')
 			st = time.time()
 			for bgc_obj in bgcList:
-				print(bgc_obj.names)
-				lda.EStep(bgc_obj, dictionaries)
+				self.lda.EStep(bgc_obj, dictionaries)
 				n+=1
 
 			em = time.time() - st
@@ -52,24 +52,26 @@ class LDA_iterator:
 
 			#### loop for all BGC objects the M-step:
 			n=0
-			lda.vita_pre = copy.deepcopy(lda.vita)
+			self.lda.vita_pre = copy.deepcopy(self.lda.vita)
 			print('****** Computation of M - Step ******')
 			st = time.time()
 			for bgc_obj in bgcList:
-				lda.MStep(bgc_obj, dictionaries)
+				self.lda.MStep(bgc_obj, dictionaries)
 				n+=1
+			self.lda.normaliseVita()
+
 			mm = time.time() - st
 			tm = time.gmtime(mm)
 			self.time_status(self.loop, tm.tm_hour, tm.tm_min, tm.tm_sec, 2)
 
 			#### Loop for the Lower Bound!
 			n=0
-			lda.totalLBound_pre.append(lda.totalLBound)
-			lda.totalLBound = 0.0
+			self.lda.totalLBound_pre.append(self.lda.totalLBound)
+			self.lda.totalLBound = 0.0
 			print("****** Computation of Lower Bound for each BGC ******")
 			st = time.time()
 			for bgc_obj in bgcList:
-				lda.lowerBound(bgc_obj,dictionaries)
+				self.lda.lowerBound(bgc_obj,dictionaries)
 				n+=1
 
 			lb = time.time() - st
@@ -77,11 +79,11 @@ class LDA_iterator:
 			self.time_status(self.loop, tm.tm_hour, tm.tm_min, tm.tm_sec, 3)
 
 			h = 0
-			if (len(lda.totalLBound_pre)>=1):
-				h = len(lda.totalLBound_pre) - 1
+			if (len(self.lda.totalLBound_pre)>=1):
+				h = len(self.lda.totalLBound_pre) - 1
 
-			calcError = np.abs(lda.totalLBound - lda.totalLBound_pre[h])
-			print('total LB pre: {} post: {}'.format(lda.totalLBound_pre[h],lda.totalLBound))
+			calcError = np.abs(self.lda.totalLBound - self.lda.totalLBound_pre[h])
+			print('total LB pre: {} post: {}'.format(self.lda.totalLBound_pre[h],self.lda.totalLBound))
 			#print('total LB printed in main: {}'.format(lda.totalLBound))
 
 			if (calcError <= self.error) or (self.loop == self.iteration):
@@ -95,8 +97,8 @@ class LDA_iterator:
 		print('The program stores the BGC objects to text files.\nPlease wait.')
 
 		for bgc_obj in bgcList:
-			saveBGC.saveBGCobject(bgc_obj)
-		saveBGC.saveLDA(lda, self.loop)
+			self.saveBGC.saveBGCobject(bgc_obj)
+		self.saveBGC.saveLDA(self.lda, self.loop)
 
 		elapse_time = time.time() - start_time
 		tm = time.gmtime(elapse_time)
