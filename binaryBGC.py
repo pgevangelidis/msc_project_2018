@@ -1,0 +1,1 @@
+#this file will be the old BGC but it will extend the phi matrix to keep record of all genes and probabilites within a dictionary.
