@@ -5,14 +5,11 @@ import glob
 import os.path
 
 class store_BGC:
-	def __init__(self):
+	def __init__(self, path_a, path_b):
 		self.counter = 0
 		self.filename = 'Object_'
-		# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src\bgc_objects'
-		# mac path
-		self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/bgc_objects/'
-		# self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src\lda_object'
-		self.path_b = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/lda_object/'
+		self.path = path_a
+		self.path_b = path_b
 		folder = dirCheck()
 		folder.checkDir(self.path)
 		folder.checkDir(self.path_b)
@@ -33,13 +30,14 @@ class store_BGC:
 
 		output_handler.write('phi:\n')
 
-		for i in range(bgc.phi.shape[0]):
-			for j in range(bgc.phi.shape[1]):
-				output_handler.write('\t{}'.format(bgc.phi[i][j]))
+		for i in bgc.phi.keys():
+			array = bgc.phi[i]
+			for j in range(array.shape[0]):
+				output_handler.write('\t{}'.format(array[j]))
 			output_handler.write('\n')
 
-		output_handler.write('phi_pre:\n')
-
+		output_handler.write('gamma:\n')
+		
 		for i in range(bgc.gamma.shape[1]):
 			output_handler.write('\t{}'.format(bgc.gamma[0][i]))
 		output_handler.write('\n')

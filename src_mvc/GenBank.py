@@ -4,7 +4,7 @@ from LDAmodel import *
 from dirCheck import *
 import glob
 import os.path
-from BGC import * 
+from binaryBGC import *
 from Bio import SeqIO
 
 class GenBank:
@@ -12,13 +12,13 @@ class GenBank:
 
 	def __init__(self):
 		# # this is the source folder
-		# self.path = r'C:\Users\user\Documents\msc_thesis_2018\gbk\gbk_files' # There is also a test folder under the name \gbk_file_test
+		self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\gbk_files' # There is also a test folder under the name \gbk_file_test
 		# mac path
-		self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/gbk_test/'
+		# self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/gbk_test/'
 		# this is the destination folder
-		# self.save_path = r"C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src\geneList"
+		self.save_path = r"C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\geneList"
 		# # mac path
-		self.save_path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/genelist/'
+		# self.save_path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/genelist/'
 		# check the directories
 		folder = dirCheck()
 		folder.checkDir(self.path)
@@ -53,7 +53,7 @@ class GenBank:
 				# for each BGC I will create one object of BGC
 				# and then before reading the next BGC store the object
 				# to a list object.  Do it at the end.
-				bgc = BGC(gbk_record.name)
+				bgc = binaryBGC(gbk_record.name) # I will change the BGC object to BGCbinary object
 				# store the description and the source of the gbk file in to the object
 				bgc.description = gbk_record.description
 				bgc.source = gbk_record.annotations['source']

@@ -34,12 +34,13 @@ class LDA_model:
 		partBE = bgc.partBE
 		partD = bgc.partD
 
-		n = 0
+
 		for gene in bgc.genes:
 			row = dictionaries.geneDict[gene]
-			for j in range(bgc.phi.shape[1]):
-				partC += bgc.phi[n][j]*np.log(self.vita[row][j])
-			n += 1
+			array = bgc.phi[gene]
+			for j in range(array.shape[1]):
+				partC += array[0][j]*np.log(self.vita[row][j])
+
 
 		temp = partA+partBE+partC+partD
 
@@ -63,24 +64,25 @@ class LDA_model:
 	##### E Step #####################
 	##################################
 	def EStep(self, bgc, dictionaries):
-		counter = 0
-		bgc.phi_pre = copy.deepcopy(bgc.phi)
+		temp = np.zeros((1,bgc.kapa), dtype=float)
+
 		bgc.gamma_pre = copy.deepcopy(bgc.gamma)
 
 		factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
 		####### the algorithm #########
 		for gene in bgc.genes:
+			array = bgc.phi[gene]
 			for i in range(self.kapa):
 				row = dictionaries.geneDict[gene]
 				factor = scipy.special.digamma(bgc.gamma[0][i])
-				bgc.phi[counter][i] = self.vita[row][i]*np.exp(factor-factor_phi)
-			bgc.phi[counter] = bgc.phi[counter]/(np.sum(bgc.phi[counter])) # this normalise method satisfies the sum to 1
-			counter += 1
+				array[0][i] = self.vita[row][i]*np.exp(factor-factor_phi)
+			bgc.phi[gene] = array/(np.sum(array)) # this normalise method satisfies the sum to 1
 
-		temp = bgc.phi.sum(axis=0)
 
-		tep = np.reshape(temp, (1,temp.shape[0]))
-		bgc.gamma = self.alpha + tep
+			temp += bgc.phi[gene]
+
+		# tep = np.reshape(temp, (1,temp.shape[0]))
+		bgc.gamma = self.alpha + temp
 
 		bgc.setPartA(self.alpha)
 		bgc.setPartBE()
@@ -91,14 +93,10 @@ class LDA_model:
 
 	def MStep(self, bgc, dictionaries):
 
-		# temp = bgc.phi.sum(axis=0)
-
-		n=0 # this counter is for the rows of phi matrix
 		for gene in bgc.genes:
 			row = dictionaries.geneDict[gene]
-			self.vita[row] += bgc.phi[n]
-			# self.vita[row] += bgc.phi[n]/temp
-			n += 1
+			self.vita[row] += np.reshape(bgc.phi[gene], (self.kapa,))
+
 
 	def normaliseVita(self):
 

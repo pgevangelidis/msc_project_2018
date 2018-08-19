@@ -47,12 +47,12 @@ if __name__ == '__main__':
 		flag = False
 		while (flag!=True) :
 			try:
-				mode = int(raw_input('\nEnter your input:'))
+				mode = int(input('\nEnter your input:'))
 				if(mode>0 or mode<(menuToString.choices+1)):
 					flag = True
 			except ValueError:
 				print("Not a number\n")
-
+		print('\n')
 		# create the controller who will control the mode value
 		controllerMenu.defineMode(mode)
 

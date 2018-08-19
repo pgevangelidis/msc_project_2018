@@ -14,7 +14,10 @@ class NMF_model:
         self.coordinates = []
         self.W = []
         self.H = []
-        self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/NMF_files/'
+        # mac path
+        # self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/NMF_files/'
+        # windows path
+        self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\NMF_files'
         folder = dirCheck()
         folder.checkDir(self.path)
 

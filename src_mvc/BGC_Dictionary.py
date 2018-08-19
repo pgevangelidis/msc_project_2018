@@ -15,7 +15,10 @@ class BGC_Dictionary:
 		self.coordinates = []
 		self.col = 0
 		self.row = 0
-		self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/product_files/'
+		# mac path
+		# self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/product_files/'
+		# windows path
+		self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\product_files'
 		folder = dirCheck()
 		folder.checkDir(self.path)
 

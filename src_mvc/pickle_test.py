@@ -7,12 +7,10 @@ class pickle_test:
 		self.flag = True
 		self.tests = 0
 
-	def testOutput(self):
+	def testOutput(self, bgc):
 		if self.flag == False:
-			print('Something went wrong.\nThe load was NOT successfull.\n')
-		else:
-			print('All set.\n')
-
+			print('Something went wrong.\nThe file was NOT loaded successfully.\n')
+			print('The file was {}'.format(bgc.name))
 
 	def is_empty(self, any_structure):
 		if any_structure:
@@ -40,7 +38,8 @@ class pickle_test:
 		if bgc.gamma.shape[1] != self.topic and self.is_empty(bgc.gamma)==True:
 			self.tests += 1
 
-		if bgc.phi.shape[1] != self.topic and self.is_empty(bgc.phi)==True:
+		array = bgc.phi.values()
+		if self.is_empty(array)==True:
 			self.tests += 1
 
 
