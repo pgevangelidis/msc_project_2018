@@ -87,6 +87,7 @@ class LDA_iterator:
 			st = time.time()
 
 			if self.binary==True:
+				print("The Binary Model is selected!")
 				self.runMStepBinary(bgcList, dictionaries)
 			else:
 				self.runMStep(bgcList, dictionaries)

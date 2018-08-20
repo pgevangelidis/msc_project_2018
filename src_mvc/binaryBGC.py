@@ -97,10 +97,3 @@ class binaryBGC:
 			self.partD += scipy.special.gammaln(self.gamma[0][i])
 			self.partD -= (self.gamma[0][i] - 1)*(scipy.special.digamma(self.gamma[0][i]) - scipy.special.digamma(np.sum(self.gamma)))
 
-	
-	#This methid is called when the Binary model is called.
-	def binaryPhi(self, geneDict):
-		# Initialise the phi for the whole gene dictionary. 
-		for key in geneDict.keys():
-			if key not in self.phi.keys():
-				self.phi.update({key : np.full((1,self.kapa),(1/self.kapa))})

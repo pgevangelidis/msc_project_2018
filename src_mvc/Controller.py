@@ -5,6 +5,7 @@ from LDA_iterator import *
 from LDAmodel import *
 from LDAbinary import *
 from NMF import *
+from MixtureModel import *
 from dirCheck import *
 from pickle_test import *
 from plots_v2 import *
@@ -26,6 +27,7 @@ class Controller:
 		self.nmf = NMF_model()
 		self.lda = LDA_model(100) # the number 100 is just an initial number
 		self.ldaBinary = LDA_model_binary(100) # the number 100 is just a number
+		self.mixModel = MixtureModel(self.dictionaries, 50, 0.01)
 
 	def defineMode(self, mode):
 
@@ -75,12 +77,17 @@ class Controller:
 			lda_iter = LDA_iterator(len(self.dictionaries.geneDict), lda_obj, True)
 			lda_iter.iterator(self.genBank_obj.bgcList, self.dictionaries)
 			self.ldaBinary = lda_iter.lda
-		
+
 		if(mode==6):
+			print('\nMixture Model\n')
+			self.mixModel(self.dictionaries, 50, 0.01)
+
+		
+		if(mode==7):
 			self.plotCurve.createPlot(self.lda, self.genBank_obj.bgcList)
 
 
-		if(mode==7):
+		if(mode==8):
 			self.exitCond = True
 
 
