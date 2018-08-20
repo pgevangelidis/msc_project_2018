@@ -68,10 +68,6 @@ class Controller:
 			# create a class which will check if the bgc objects have the right size of phi
 			numGenes = len(self.dictionaries.geneDict)
 			print('{}'.format(numGenes))
-			if numGenes>0:
-				for bgc_obj in self.genBank_obj.bgcList:
-					if len(bgc_obj.phi.keys()) != numGenes:
-						bgc_obj.binaryPhi(self.dictionaries.geneDict)
 
 			lda_obj = LDA_model_binary(len(self.dictionaries.geneDict))
 			lda_iter = LDA_iterator(len(self.dictionaries.geneDict), lda_obj, True)

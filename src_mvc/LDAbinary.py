@@ -17,6 +17,7 @@ class LDA_model_binary:
 		self.vita_pre = self.vita
 		self.totalLBound = 0.0
 		self.totalLBound_pre = []
+		self.phi = {}
 
 	##################################
 	#### Lower Bound #################
