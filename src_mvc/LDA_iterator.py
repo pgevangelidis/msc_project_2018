@@ -49,18 +49,18 @@ class LDA_iterator:
 	def choosePath(self, binary):
 		if binary ==True:
 			# windows path
-			self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\bgc_objects_binary'
-			self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\lda_object_binary'
+			# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\bgc_objects_binary'
+			# self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\lda_object_binary'
 			# mac path
-			# self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/bgc_objects_binary/')
-			# self.path_b = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/lda_object_binary/')
+			self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/bgc_objects_binary/'
+			self.path_b = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_object_binary/'
 		else:
 			# windows path
-			self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\bgc_objects'
-			self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\lda_object'
+			# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\bgc_objects'
+			# self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\lda_object'
 			# mac path
-			# self.path = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/bgc_objects/')
-			# self.path_b = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/lda_object/')
+			self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/bgc_objects/'
+			self.path_b = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_object/'
 
 
 	def iterator(self, bgcList, dictionaries):

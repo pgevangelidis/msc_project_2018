@@ -14,8 +14,8 @@ class Controller:
 
 	def __init__(self):
 		self.exitCond = False
-		self.path_pickle = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\pickle'
-		# self.path_pickle = r'/Users/pavlos/Documents/personal/msc_project/msc_project_2018/src_mvc/pickle/' # To be defined
+		# self.path_pickle = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\pickle'
+		self.path_pickle = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/pickle/' # To be defined
 		folder = dirCheck()
 		folder.checkDir(self.path_pickle)
 		# self.ldaBGCList = []
@@ -76,7 +76,8 @@ class Controller:
 
 		if(mode==6):
 			print('\nMixture Model\n')
-			self.mixModel(self.dictionaries, 50, 0.01)
+			self.mixModel = MixtureModel(self.dictionaries, 50, 0.01)
+			self.mixModel.MM_iterator()
 
 		
 		if(mode==7):
