@@ -14,11 +14,15 @@ class GenBank:
 		# # this is the source folder
 		# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\gbk_files' # There is also a test folder under the name \gbk_file_test
 		# mac path
-		self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/gbk_test/'
+		directory = os.path.dirname(os.path.realpath(__file__))
+		self.path = directory + "\\gbk_test\\"
+		# self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/gbk_test/'
 		# this is the destination folder
 		# self.save_path = r"C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\geneList"
 		# # mac path
-		self.save_path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/genelist/'
+		directory = os.path.dirname(os.path.realpath(__file__))
+		self.save_path = directory + "\\genelist\\"
+		# self.save_path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/genelist/'
 		# check the directories
 		folder = dirCheck()
 		folder.checkDir(self.path)

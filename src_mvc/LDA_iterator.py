@@ -12,6 +12,8 @@ class LDA_iterator:
 		self.iteration = 60 # I have picked 100 iteration hoping the LDA will merge before them
 		self.error = 0.03
 		self.errorFlag = False
+		self.calcError = 0.0
+		self.calcError_pre = [1]
 		self.loop = 0
 		self.step = ""
 		self.binary = binary
@@ -48,19 +50,13 @@ class LDA_iterator:
 	# choose the right path for each model
 	def choosePath(self, binary):
 		if binary ==True:
-			# windows path
-			# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\bgc_objects_binary'
-			# self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\lda_object_binary'
-			# mac path
-			self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/bgc_objects_binary/'
-			self.path_b = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_object_binary/'
+			directory = os.path.dirname(os.path.realpath(__file__))
+			self.path = directory + "\\bgc_objects_binary\\"
+			self.path_b = directory + "\\lda_objects_binary\\"
 		else:
-			# windows path
-			# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\bgc_objects'
-			# self.path_b = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\lda_object'
-			# mac path
-			self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/bgc_objects/'
-			self.path_b = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_object/'
+			directory = os.path.dirname(os.path.realpath(__file__))
+			self.path = directory + "\\bgc_objetcs\\"
+			self.path_b = directory + "\\lda_objects\\"
 
 
 	def iterator(self, bgcList, dictionaries):
@@ -114,14 +110,31 @@ class LDA_iterator:
 			if (len(self.lda.totalLBound_pre)>=1):
 				h = len(self.lda.totalLBound_pre) - 1
 
-			calcError = np.abs(self.lda.totalLBound - self.lda.totalLBound_pre[h])
-			print('total LB pre: {} post: {}'.format(self.lda.totalLBound_pre[h],self.lda.totalLBound))
-			#print('total LB printed in main: {}'.format(lda.totalLBound))
+			
 
-			if (calcError <= self.error) or (self.loop == self.iteration):
+			print('total LB pre: {} post: {}'.format(self.lda.totalLBound_pre[h],self.lda.totalLBound))
+			
+			
+			self.calcError = np.abs(self.lda.totalLBound - self.lda.totalLBound_pre[h])
+
+			if (self.lda.totalLBound - self.lda.totalLBound_pre[h]) > 0:
+				print("\t|\n\tV\n")
+			else:
+				print("\tΛ\n\t|\n")
+			
+			t = np.abs(self.calcError - self.calcError_pre[-1])
+			self.calcError_pre.append(t)
+
+			stopflag = False
+			if len(self.calcError_pre)>6:
+				if (self.calcError_pre[-4] < 0.5) and (self.calcError_pre[-1] < 0.5) and (self.calcError_pre[-2] < 0.5) and (self.calcError_pre[-3] < 0.5):
+					stopflag = True
+
+
+			if (self.calcError <= self.error) or (self.loop == self.iteration) or (stopflag==True):
 				self.errorFlag = True
 
-			print('calcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(calcError, self.error, self.loop, self.iteration))
+			print('calcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.calcError, self.error, self.loop, self.iteration))
 			self.loop+=1
 
 		self.loop -= 1

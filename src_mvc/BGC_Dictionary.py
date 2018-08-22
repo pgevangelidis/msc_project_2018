@@ -16,7 +16,9 @@ class BGC_Dictionary:
 		self.col = 0
 		self.row = 0
 		# mac path
-		self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/product_files/'
+		directory = os.path.dirname(os.path.realpath(__file__))
+		self.path = directory + "\\product_files\\"
+		# self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/product_files/'
 		# windows path
 		# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\product_files'
 		folder = dirCheck()

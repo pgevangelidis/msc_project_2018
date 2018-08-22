@@ -1,6 +1,6 @@
 # This class only contains the main menu which is shown to the user.
 # It has only one function the menu() function.
-
+import os 
 class showMenu:
 
 	def __init__(self):

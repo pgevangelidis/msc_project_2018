@@ -42,10 +42,10 @@ class LDA_model_binary:
 			wd = 0
 			row = dictionaries.geneDict[gene]
 			array = bgc.phi[gene]
-			if gene in bgc.geneDict.keys():
+			if gene in bgc.genes:
 				wd = 1
 
-			partC = np.sum(array[0]*(wd*np.log(self.vita[row]) + (1-wd)*(1-np.log(self.vita[row]))))
+			partC = np.sum(array[0]*(wd*np.log(self.vita[row] + 0.0001) + (1-wd)*np.log(1-self.vita[row] + 0.0001)))
 
 
 		temp = partA+partBE+partC+partD
@@ -81,11 +81,11 @@ class LDA_model_binary:
 			wd = 0
 			row = dictionaries.geneDict[gene]
 			array = bgc.phi[gene]
-			if gene in bgc.geneDict.keys():
+			if gene in bgc.genes:
 				wd = 1
-			for i in range(self.kapa):
-				factor = scipy.special.digamma(bgc.gamma[0][i])
-				array[0][i] = ((self.vita[row][i]*wd)+(1-wd)*(1-self.vita[row][i]))*np.exp(factor-factor_phi)
+			# for i in range(self.kapa):
+			factor = scipy.special.digamma(bgc.gamma)
+			array = ((np.log(self.vita[row]+0.0001)*wd)+(1-wd)*np.log(1-self.vita[row]+0.0001))*np.exp(factor-factor_phi)
 			bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
 
 
@@ -109,15 +109,13 @@ class LDA_model_binary:
 			denominator = np.zeros((1,bgc.kapa), dtype=float)
 			# and for each document in the corpus
 			for bgc in bgcList:
-				wd = 0
 				# if the gene from the vocabulary exists in the selected bgc then the wd = 1
-				if gene in bgc.geneDict.keys():
-					wd = 1
-				
-				numerator += bgc.phi[gene]*wd
-				denominator += bgc.phi[gene]
+				if gene in bgc.genes:
+					numerator += bgc.phi[gene]
+					denominator += bgc.phi[gene]
+				denominator += np.log(1-self.vita[row]+0.0001)*np.exp(scipy.special.digamma(bgc.gamma) - scipy.special.digamma(np.sum(bgc.gamma)))
 
-			self.vita[row] = numerator/denominator
+			self.vita[row] = (numerator)/(denominator)
 
 
 	def normaliseVita(self):

@@ -95,7 +95,7 @@ class LDA_model:
 
 		for gene in bgc.genes:
 			row = dictionaries.geneDict[gene]
-			self.vita[row] += np.reshape(bgc.phi[gene], (self.kapa,))
+			self.vita[row] += np.reshape(bgc.phi[gene], (self.kapa,)) + 0.0001 # smooth factor.
 
 
 	def normaliseVita(self):

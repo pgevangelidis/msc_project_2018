@@ -97,7 +97,6 @@ class LDA_model:
 		for gene in bgc.genes:
 			row = dictionaries.geneDict[gene]
 			self.vita[row] += bgc.phi[n]
-			# self.vita[row] += bgc.phi[n]/temp
 			n += 1
 
 	def normaliseVita(self):

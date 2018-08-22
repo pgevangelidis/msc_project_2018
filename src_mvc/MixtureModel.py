@@ -3,6 +3,7 @@
 import numpy as np
 import copy
 import time
+import os
 from dirCheck import *
 
 class MixtureModel:
@@ -22,7 +23,9 @@ class MixtureModel:
 		#This number is more like a safety number if the model cannot converge
 		self.iterations = 25
 		# mac path
-		self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/MM_files/'
+		directory = os.path.dirname(os.path.realpath(__file__))
+		self.path = directory + "/MM_files/"
+		# self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/MM_files/'
 		# windows path
 		# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\MM_files'
 		folder = dirCheck()
@@ -31,10 +34,13 @@ class MixtureModel:
 		self.partA = 0.0
 		self.partB = 0.0
 		self.partC = 0.0
-		self.LB = 0.0
-		self.LB_pre = 0.0
+		self.totaLBound = 0.0
+		self.totalLBound_pre = []
 
-	def exportMM(self):
+	def exportMM(self, loop):
+
+		saveMixture = storeBGC(self.path, self.path)
+		saveMixture.saveLDA(self, loop)
 
 		Qiou_file = os.path.join(self.path, 'Qiou_file.txt')
 		Beta_file = os.path.join(self.path, 'Beta_file.txt')
@@ -82,11 +88,11 @@ class MixtureModel:
 
 	def MM_LBound(self):
 		#Calculating the lower bound
-		self.LB_pre = copy.deepcopy(self.LB)
+		self.totaLBound_pre.append(self.totaLBound)
 		self.MM_partA()
 		self.MM_partB()
 		self.MM_partC() 
-		self.LB = self.partA + self.partB - self.partC
+		self.totaLBound = self.partA + self.partB - self.partC
  
 
 	def MM_EStep(self):
@@ -96,10 +102,10 @@ class MixtureModel:
 			numerator = np.zeros((1,self.kapa), dtype = float)
 			for gene in self.dictionaries.geneDict.keys(): # if the gene exists in the particular bgc then is 1 otherwise 0
 				wd = 0
-				row_gene = self.dictionaries.geneDict[gene] # this line reutrns the number of row for this gene
+				row_gene = self.dictionaries.geneDict[gene] # this line returns the number of row for this gene
 				if gene in self.dictionaries.bgcGeneDict[bgc]:
 					wd = 1
-				numerator += wd*np.log(self.vita[row_gene]) + (1-wd)*np.log(1 - self.vita[row_gene])
+				numerator += wd*np.log(self.vita[row_gene]+0.001) + (1-wd)*np.log(1.001 - self.vita[row_gene]) # The smoothness is for the divide by zero
 			if (np.sum(self.pi * numerator)!=0):
 				self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
 
@@ -124,7 +130,7 @@ class MixtureModel:
 					wd = 1 
 				numerator += self.qiou[row_bgc]*wd
 				denominator += self.qiou[row_bgc]
-			self.vita[row_gene] = numerator / denominator  
+			self.vita[row_gene] = (numerator + 0.0001)/ (denominator + 0.005) 
 
 	def MM_iterator(self):
 		# This method captures the iterations of EM algorithm which updates the values of the model
@@ -144,7 +150,7 @@ class MixtureModel:
 			self.MM_LBound()
 
 			calcError_pre = copy.deepcopy(calcError)
-			calcError = np.abs(self.LB - self.LB_pre)
+			calcError = np.abs(self.totaLBound - self.totaLBound_pre[-1])
 			sensitive = np.abs(calcError - calcError_pre)
 
 			if (calcError <= self.error) or (loop == self.iterations) or (sensitive <= self.error):
@@ -155,7 +161,7 @@ class MixtureModel:
 		print('The convergence needed {} loops'.format(loop))
 		print('The program stores the MM object to text files.\nPlease wait.')
 
-		self.exportMM()
+		self.exportMM(loop)
 		elapse_time = time.time() - start_time
 		tm = time.gmtime(elapse_time)
 		print('The elapsed time is: {}:{}:{}\n'.format(tm.tm_hour, tm.tm_min, tm.tm_sec))

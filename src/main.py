@@ -93,15 +93,6 @@ if __name__ == '__main__':
 		#print("The file %d was completed successfully." % numberOfFile)
 		numberOfFile +=1
 
-	# ############## Test about phi and phi_pre #########################
-	# test1 = bgcList[0]
-	# test2 = bgcList[23]
-	# test3 = bgcList[1023]
-	# print('{}:\nthe phi is:\n{}\nphi_pre is:\n{}'.format(test1.name, test1.phi[0], test1.phi_pre[0]))
-	# print('{}:\nthe phi is:\n{}\nphi_pre is:\n{}'.format(test2.name, test2.phi[0], test2.phi_pre[0]))
-	# print('{}:\nthe phi is:\n{}\nphi_pre is:\n{}'.format(test3.name, test3.phi[0], test3.phi_pre[0]))
-	# ###################################################################
-
 	output_handle.close()
 	################################
 	# Set the dictionaries of BGC, Gene and BGC/Gene

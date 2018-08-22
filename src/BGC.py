@@ -20,7 +20,7 @@ class BGC:
 		# Those are matrices for the LDA model
 		self.kapa = 50 # This is the assumed number of topics. If changed here it MUST change in LDA also.
 		self.phi = np.full((1,self.kapa),(1/self.kapa)) # kapa is the number of topics, 1/k
-		self.phi_pre = np.full((1,self.kapa), 0.0)
+		# nself.phi_pre = np.full((1,self.kapa), 0.0)
 		self.gamma = np.full((1,self.kapa),(51/self.kapa)) # kapa is the number of topics
 		self.gamma_pre = np.full((1,self.kapa),0.0) # The gamma = alpha + N/k
 		self.number = 0
@@ -51,7 +51,7 @@ class BGC:
 			# This is the initialisation of phi and gamma part 2
 			if (len(self.geneDict) > 1):
 				self.phi = np.vstack((self.phi, np.full((1,self.kapa),(1/self.kapa))))
-				self.phi_pre = np.vstack((self.phi_pre, np.full((1,self.kapa), 0.0)))
+				# self.phi_pre = np.vstack((self.phi_pre, np.full((1,self.kapa), 0.0)))
 				self.gamma += 1/self.kapa
 
 	# This method checks if there are dublicate genes in

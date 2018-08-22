@@ -15,7 +15,9 @@ class Controller:
 	def __init__(self):
 		self.exitCond = False
 		# self.path_pickle = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\pickle'
-		self.path_pickle = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/pickle/' # To be defined
+		directory = os.path.dirname(os.path.realpath(__file__))
+		self.path_pickle = directory + "\\pickle\\"
+		# self.path_pickle = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/pickle/' # To be defined
 		folder = dirCheck()
 		folder.checkDir(self.path_pickle)
 		# self.ldaBGCList = []
