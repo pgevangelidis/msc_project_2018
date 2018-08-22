@@ -16,7 +16,7 @@ class Controller:
 		self.exitCond = False
 		# self.path_pickle = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\pickle'
 		directory = os.path.dirname(os.path.realpath(__file__))
-		self.path_pickle = directory + "\\pickle\\"
+		self.path_pickle = directory + "/pickle/"
 		# self.path_pickle = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/pickle/' # To be defined
 		folder = dirCheck()
 		folder.checkDir(self.path_pickle)
@@ -30,6 +30,7 @@ class Controller:
 		self.lda = LDA_model(100) # the number 100 is just an initial number
 		self.ldaBinary = LDA_model_binary(100) # the number 100 is just a number
 		self.mixModel = MixtureModel(self.dictionaries, 50, 0.01)
+		self.modelList = [] # This list should contain 3 models. 1) LDA original 2) LDA binary 3) Mixture Model. Its purpose is to load the plots.
 
 	def defineMode(self, mode):
 

@@ -5,6 +5,7 @@ import copy
 import time
 import os
 from dirCheck import *
+from storeBGC import *
 
 class MixtureModel:
 
@@ -19,6 +20,7 @@ class MixtureModel:
 		self.pi = np.full((1,self.kapa), (1/self.kapa)) # this is the phi parameter 
 		self.qiou = np.full((self.ni, self.kapa), (0.0001)) # This is the phi matrix similar to LDA
 		self.qiouApprox = np.full((self.ni, self.kapa), 0.0001)
+		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
 		self.vita = np.random.rand(self.di, self.kapa) # This is the equal vita matrix with the gene probabilities
 		#This number is more like a safety number if the model cannot converge
 		self.iterations = 25
@@ -34,12 +36,15 @@ class MixtureModel:
 		self.partA = 0.0
 		self.partB = 0.0
 		self.partC = 0.0
-		self.totaLBound = 0.0
+		self.totalLBound = 0.0
 		self.totalLBound_pre = []
+		self.calcError = 0.0
+		self.calcError_pre = 0.0
+		self.sensitive = 0.01
 
 	def exportMM(self, loop):
 
-		saveMixture = storeBGC(self.path, self.path)
+		saveMixture = store_BGC(self.path, self.path)
 		saveMixture.saveLDA(self, loop)
 
 		Qiou_file = os.path.join(self.path, 'Qiou_file.txt')
@@ -88,11 +93,11 @@ class MixtureModel:
 
 	def MM_LBound(self):
 		#Calculating the lower bound
-		self.totaLBound_pre.append(self.totaLBound)
+		self.totalLBound_pre.append(self.totalLBound)
 		self.MM_partA()
 		self.MM_partB()
 		self.MM_partC() 
-		self.totaLBound = self.partA + self.partB - self.partC
+		self.totalLBound = self.partA + self.partB - self.partC
  
 
 	def MM_EStep(self):
@@ -100,15 +105,18 @@ class MixtureModel:
 		for bgc in self.dictionaries.bgcDict.keys():
 			row_bgc = self.dictionaries.bgcDict[bgc]
 			numerator = np.zeros((1,self.kapa), dtype = float)
+			# print("pre\n{}\n".format(numerator))
 			for gene in self.dictionaries.geneDict.keys(): # if the gene exists in the particular bgc then is 1 otherwise 0
 				wd = 0
 				row_gene = self.dictionaries.geneDict[gene] # this line returns the number of row for this gene
 				if gene in self.dictionaries.bgcGeneDict[bgc]:
 					wd = 1
-				numerator += wd*np.log(self.vita[row_gene]+0.001) + (1-wd)*np.log(1.001 - self.vita[row_gene]) # The smoothness is for the divide by zero
-			if (np.sum(self.pi * numerator)!=0):
+				numerator += wd*np.log(self.vita[row_gene]+0.0001) + (1-wd)*np.log(1.0001 - self.vita[row_gene])
+				# print("post\n{}\n".format(numerator)) # The smoothness is for the divide by zero
 				self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
-
+				print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
+				
+			
 
 		# Updating the pi
 		for bgc in self.dictionaries.bgcDict.keys():
@@ -119,6 +127,8 @@ class MixtureModel:
 
 	def MM_MStep(self):
 		# Updating vita
+		self.vita_pre = copy.deepcopy(self.vita)
+
 		for gene in self.dictionaries.geneDict.keys():
 			row_gene = self.dictionaries.geneDict[gene]
 			numerator = np.zeros((1,self.kapa), dtype = float)
@@ -137,8 +147,6 @@ class MixtureModel:
 		start_time = time.time()
 		flag = False
 		loop = 0
-		calcError = 0.0
-		calcError_pre = 0.0
 		while(flag!=True):
 			print('loop {}\n'.format(loop))
 			print('\n***** Computation of E - Step *****\n')
@@ -149,13 +157,13 @@ class MixtureModel:
 			print('\n***** Computation of Lower Bound *****\n')
 			self.MM_LBound()
 
-			calcError_pre = copy.deepcopy(calcError)
-			calcError = np.abs(self.totaLBound - self.totaLBound_pre[-1])
-			sensitive = np.abs(calcError - calcError_pre)
+			self.calcError_pre = copy.deepcopy(self.calcError)
+			self.calcError = np.abs(self.totalLBound - self.totalLBound_pre[-1])
+			sensitive = np.abs(self.calcError - self.calcError_pre)
 
-			if (calcError <= self.error) or (loop == self.iterations) or (sensitive <= self.error):
+			if ((self.calcError <= self.error) and (sensitive <= self.error)) or (loop == self.iterations):
 				flag = True
-			print('calcError: {}\t error: {}\t sensitive: {}\nloop: {}\t iteration: {}\n'.format(calcError, sensitive, self.error, loop, self.iterations))
+			print('calcError: {}\t sensitive: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.calcError, sensitive, self.error, loop, self.iterations))
 			loop += 1
 		loop -= 1
 		print('The convergence needed {} loops'.format(loop))

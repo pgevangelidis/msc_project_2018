@@ -36,6 +36,8 @@ class LDA_iterator:
 	def runEStep(self, bgcList, dictionaries):
 		for bgc_obj in bgcList:
 			self.lda.EStep(bgc_obj, dictionaries)
+	def runEStepBinary(self, bgcList, dictionaries):
+		self.lda.EStep(bgcList, dictionaries)
 	# run m-step method
 	def runMStep(self, bgcList, dictionaries):
 		for bgc_obj in bgcList:
@@ -118,9 +120,9 @@ class LDA_iterator:
 			self.calcError = np.abs(self.lda.totalLBound - self.lda.totalLBound_pre[h])
 
 			if (self.lda.totalLBound - self.lda.totalLBound_pre[h]) > 0:
-				print("\t|\n\tV\n")
+				print("\t|\n\t\\/\n")
 			else:
-				print("\tΛ\n\t|\n")
+				print("\t/\\\n\t|\n")
 			
 			t = np.abs(self.calcError - self.calcError_pre[-1])
 			self.calcError_pre.append(t)

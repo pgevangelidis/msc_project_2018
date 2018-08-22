@@ -13,3 +13,7 @@ class PickleBGC:
 				return pickle.load(f)
 		except:
 			print('This name does not exist.')
+
+	def storeModel(self, model, name, dir):
+		with open(dir + "\\" + name + ".pickle", "wb") as f:
+			pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)

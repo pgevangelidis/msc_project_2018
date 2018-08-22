@@ -29,7 +29,7 @@ class BGCplot:
 
         self.lb_array = np.asarray(lb_list)
         # This technique converts the negative values to positive, for displaying reasons only.
-        self.lb_array = np.log(-np.amin(self.lb_array) + self.lb_array)
+        self.lb_array = np.log(-np.amin(self.lb_array) + self.lb_array + 0.0001) # this smooth factor is useful to avoid values close to zero.
 
         self.derivativeLB()
         self.plot_LB()

@@ -69,7 +69,7 @@ class LDA_model_binary:
 	##################################
 	##### E Step #####################
 	##################################
-	def EStep(self, bgc, dictionaries):
+	def EStep(self, bgcList, dictionaries):
 		temp = np.zeros((1,50), dtype=float)
 		wd = 0
 		# bgc.phi_pre = copy.deepcopy(bgc.phi)
@@ -80,16 +80,17 @@ class LDA_model_binary:
 		for gene in dictionaries.geneDict.keys():
 			wd = 0
 			row = dictionaries.geneDict[gene]
-			array = bgc.phi[gene]
-			if gene in bgc.genes:
-				wd = 1
-			# for i in range(self.kapa):
-			factor = scipy.special.digamma(bgc.gamma)
-			array = ((np.log(self.vita[row]+0.0001)*wd)+(1-wd)*np.log(1-self.vita[row]+0.0001))*np.exp(factor-factor_phi)
-			bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
+			array = np.full((1,50), 0.0001)
+			for bgc in bgcList:
+				if gene in bgc.genes:
+					wd = 1
+				# for i in range(self.kapa):
+				factor = scipy.special.digamma(bgc.gamma)
+				array = ((np.log(self.vita[row]+0.0001)*wd)+(1-wd)*np.log(1-self.vita[row]+0.0001))*np.exp(factor-factor_phi)
+				bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
 
 
-			temp += bgc.phi[gene]
+				temp += bgc.phi[gene]
 
 		# tep = np.reshape(temp, (1,temp.shape[0]))
 		bgc.gamma = self.alpha + temp
