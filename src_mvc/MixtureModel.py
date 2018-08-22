@@ -9,15 +9,15 @@ from storeBGC import *
 
 class MixtureModel:
 
-	def __init__(self, diction, kapa, err):
+	def __init__(self, diction, k, err):
 		# Here I store the dictionaries
 		self.dictionaries = diction # this object contains 3 important dictionaries 1) bgcDict 2) geneDict 3) bgcGeneDict
 		#This number wants the model to calibrate. Kind of. 
 		self.error = err
 		self.ni = len(diction.bgcDict.keys()) 
-		self.kapa = kapa
+		self.kapa = k
 		self.di = len(diction.geneDict.keys())
-		self.pi = np.full((1,self.kapa), (1/self.kapa)) # this is the phi parameter 
+		self.pi = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
 		self.qiou = np.full((self.ni, self.kapa), (0.0001)) # This is the phi matrix similar to LDA
 		self.qiouApprox = np.full((self.ni, self.kapa), 0.0001)
 		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
@@ -106,15 +106,25 @@ class MixtureModel:
 			row_bgc = self.dictionaries.bgcDict[bgc]
 			numerator = np.zeros((1,self.kapa), dtype = float)
 			# print("pre\n{}\n".format(numerator))
+			first = 0
 			for gene in self.dictionaries.geneDict.keys(): # if the gene exists in the particular bgc then is 1 otherwise 0
-				wd = 0
 				row_gene = self.dictionaries.geneDict[gene] # this line returns the number of row for this gene
+				# print(self.vita[row_gene])
 				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					wd = 1
-				numerator += wd*np.log(self.vita[row_gene]+0.0001) + (1-wd)*np.log(1.0001 - self.vita[row_gene])
+					if first==0:
+						numerator = 1*(self.vita[row_gene])
+					else:
+						numerator = numerator*(self.vita[row_gene])
+				else:
+					if first==0:
+						numerator = 1*(1.0001 - self.vita[row_gene])
+					else:
+						numerator = numerator*(1.0001 - self.vita[row_gene])
 				# print("post\n{}\n".format(numerator)) # The smoothness is for the divide by zero
-				self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
-				print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
+			print("numerator: {}".format(numerator))
+			print("pi {}".format(self.pi))
+			self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
+			print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
 				
 			
 
