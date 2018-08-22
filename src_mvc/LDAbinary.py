@@ -72,22 +72,22 @@ class LDA_model_binary:
 	def EStep(self, bgcList, dictionaries):
 		temp = np.zeros((1,50), dtype=float)
 		wd = 0
-		# bgc.phi_pre = copy.deepcopy(bgc.phi)
-		bgc.gamma_pre = copy.deepcopy(bgc.gamma)
 
-		factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
 		####### the algorithm #########
 		for gene in dictionaries.geneDict.keys():
 			wd = 0
 			row = dictionaries.geneDict[gene]
 			array = np.full((1,50), 0.0001)
 			for bgc in bgcList:
+				# bgc.phi_pre = copy.deepcopy(bgc.phi)
+				bgc.gamma_pre = copy.deepcopy(bgc.gamma)
+				factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
 				if gene in bgc.genes:
 					wd = 1
 				# for i in range(self.kapa):
 				factor = scipy.special.digamma(bgc.gamma)
 				array = ((np.log(self.vita[row]+0.0001)*wd)+(1-wd)*np.log(1-self.vita[row]+0.0001))*np.exp(factor-factor_phi)
-				bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
+			bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
 
 
 				temp += bgc.phi[gene]
