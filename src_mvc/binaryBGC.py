@@ -82,13 +82,17 @@ class binaryBGC:
 
 	#This method is only for the binary LDA. Because iterates in all genes of the Vocabulary
 	# This is also means that the algorithm will be singificantly slower.
-	def binary_setPartBE(self):
+	def binary_setPartBE(self, geneDict, vita):
 		self.partBE = 0.0
-		for i in self.phi.keys():
-			array = self.phi[i]
-			for j in range(array.shape[1]):
-				self.partBE += array[0][j]*(scipy.special.digamma(self.gamma[0][j]) - scipy.special.digamma(np.sum(self.gamma)))
-				self.partBE -= array[0][j]*(np.log(array[0][j]))
+		for gene in geneDict:
+			row = geneDict[gene]
+			if gene in self.genes:
+				self.partBE += np.sum(self.phi[gene]*(scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma))))
+				self.partBE -= np.sum(self.phi[gene]*(np.log(self.phi[gene])))
+			else:
+				array = np.exp(scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma)))
+				self.partBE += np.sum((1 - vita[row])*array/np.sum((1 - vita[row])*array)*(scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma))))
+				self.partBE -= np.sum((1 - vita[row])*array/np.sum((1 - vita[row])*array)*(np.log((1 - vita[row])*array/np.sum((1 - vita[row])*array))))
 
 	def setPartD(self):
 		self.partD = 0.0

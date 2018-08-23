@@ -17,7 +17,7 @@ class LDA_model_binary:
 		self.vita_pre = self.vita
 		self.totalLBound = 0.0
 		self.totalLBound_pre = []
-		self.phi = {}
+		self.phi = np.full((g, self.kapa), 0.0001) # Initialise the whole matrix to a small value in order to avoid complications.
 
 	##################################
 	#### Lower Bound #################
@@ -39,17 +39,17 @@ class LDA_model_binary:
 
 
 		for gene in dictionaries.geneDict.keys():
-			wd = 0
 			row = dictionaries.geneDict[gene]
-			array = bgc.phi[gene]
-			if gene in bgc.genes:
-				wd = 1
 
-			partC = np.sum(array[0]*(wd*np.log(self.vita[row] + 0.0001) + (1-wd)*np.log(1-self.vita[row] + 0.0001)))
+			if gene in bgc.genes:
+				partC += np.sum(bgc.phi[gene]*np.log(self.vita[row]))
+			else:
+				factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
+				array = np.exp(scipy.special.digamma(bgc.gamma) - factor_phi)
+				partC += np.sum(array*np.log(1 - self.vita[row]))
 
 
 		temp = partA+partBE+partC+partD
-
 		if np.isinf(temp):
 			print('This {} has inf value'.format(bgc.name))
 			if(np.isinf(partA)):
@@ -71,52 +71,51 @@ class LDA_model_binary:
 	##################################
 	def EStep(self, bgcList, dictionaries):
 		temp = np.zeros((1,50), dtype=float)
-		wd = 0
 
 		####### the algorithm #########
-		for gene in dictionaries.geneDict.keys():
-			wd = 0
-			row = dictionaries.geneDict[gene]
-			array = np.full((1,50), 0.0001)
-			for bgc in bgcList:
-				# bgc.phi_pre = copy.deepcopy(bgc.phi)
-				bgc.gamma_pre = copy.deepcopy(bgc.gamma)
-				factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
+		for bgc in bgcList:
+			bgc.gamma_pre = copy.deepcopy(bgc.gamma)
+
+			factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
+			array = np.exp(scipy.special.digamma(bgc.gamma) - factor_phi) # this is the exponential gamma factor of the estep
+			for gene in dictionaries.geneDict.keys():
+				row = dictionaries.geneDict[gene]
 				if gene in bgc.genes:
-					wd = 1
-				# for i in range(self.kapa):
-				factor = scipy.special.digamma(bgc.gamma)
-				array = ((np.log(self.vita[row]+0.0001)*wd)+(1-wd)*np.log(1-self.vita[row]+0.0001))*np.exp(factor-factor_phi)
-				bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
+					self.phi[row] = self.vita[row]*array/np.sum(self.vita[row]*array)
+					bgc.phi[gene] = copy.deepcopy(self.phi[row])
+				else:
+					self.phi[row] = (1 - self.vita[row])*array/np.sum((1 - self.vita[row])*array)
 
+				temp += self.phi[row]
 
-				temp += bgc.phi[gene]
+			bgc.gamma = self.alpha + temp
 
-		# tep = np.reshape(temp, (1,temp.shape[0]))
-		bgc.gamma = self.alpha + temp
-
-		bgc.setPartA(self.alpha)
-		bgc.setPartBE()
-		bgc.setPartD()
+			bgc.setPartA(self.alpha)
+			bgc.binary_setPartBE(dictionaries.geneDict, self.vita)
+			bgc.setPartD()
 	##################################
 	##### M Step #####################
 	##################################
 
 	def MStep(self, bgcList, dictionaries):
 		# for each gene from the whole vocabulary
+		self.vita_pre = copy.deepcopy(self.vita)
+
 		for gene in dictionaries.geneDict.keys():
 			row = dictionaries.geneDict[gene]
-			numerator = np.zeros((1,bgc.kapa), dtype=float)
-			denominator = np.zeros((1,bgc.kapa), dtype=float)
-			# and for each document in the corpus
+
+			numerator = np.zeros((1,self.kapa), dtype=float)
+			denominator = np.zeros((1,self.kapa), dtype=float)
+
 			for bgc in bgcList:
-				# if the gene from the vocabulary exists in the selected bgc then the wd = 1
 				if gene in bgc.genes:
 					numerator += bgc.phi[gene]
 					denominator += bgc.phi[gene]
-				denominator += np.log(1-self.vita[row]+0.0001)*np.exp(scipy.special.digamma(bgc.gamma) - scipy.special.digamma(np.sum(bgc.gamma)))
-
-			self.vita[row] = (numerator)/(denominator)
+				else:
+					factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
+					array = np.exp(scipy.special.digamma(bgc.gamma) - factor_phi)
+					denominator += (1 - self.vita_pre[row])*array/np.sum((1 - self.vita_pre[row])*array)
+			self.vita[row] = (numerator)/(0.000001+denominator)
 
 
 	def normaliseVita(self):

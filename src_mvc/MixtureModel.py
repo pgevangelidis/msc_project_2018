@@ -106,25 +106,26 @@ class MixtureModel:
 			row_bgc = self.dictionaries.bgcDict[bgc]
 			numerator = np.zeros((1,self.kapa), dtype = float)
 			# print("pre\n{}\n".format(numerator))
-			first = 0
+			first = True
 			for gene in self.dictionaries.geneDict.keys(): # if the gene exists in the particular bgc then is 1 otherwise 0
 				row_gene = self.dictionaries.geneDict[gene] # this line returns the number of row for this gene
 				# print(self.vita[row_gene])
 				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					if first==0:
+					if first==True:
 						numerator = 1*(self.vita[row_gene])
 					else:
 						numerator = numerator*(self.vita[row_gene])
 				else:
-					if first==0:
-						numerator = 1*(1.0001 - self.vita[row_gene])
+					if first==True:
+						numerator = 1*(1 - self.vita[row_gene])
 					else:
-						numerator = numerator*(1.0001 - self.vita[row_gene])
+						numerator = numerator*(1 - self.vita[row_gene])
+				first = False
 				# print("post\n{}\n".format(numerator)) # The smoothness is for the divide by zero
-			# print("numerator: {}".format(numerator))
-			# print("pi {}".format(self.pi))
+			print("numerator: {}".format(numerator))
+			print("pi {}".format(self.pi))
 			self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
-			# print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
+			print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
 				
 			
 
@@ -143,14 +144,15 @@ class MixtureModel:
 			row_gene = self.dictionaries.geneDict[gene]
 			numerator = np.zeros((1,self.kapa), dtype = float)
 			denominator = np.zeros((1,self.kapa), dtype = float)
+
 			for bgc in self.dictionaries.bgcDict.keys():
-				wd = 0
 				row_bgc = self.dictionaries.bgcDict[bgc]
+
 				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					wd = 1 
-				numerator += self.qiou[row_bgc]*wd
+					numerator += self.qiou[row_bgc]
+
 				denominator += self.qiou[row_bgc]
-			self.vita[row_gene] = (numerator + 0.0001)/ (denominator + 0.005) 
+			self.vita[row_gene] = (numerator + 0.00001)/ (denominator + 0.0005) 
 
 	def MM_iterator(self):
 		# This method captures the iterations of EM algorithm which updates the values of the model

@@ -4,7 +4,7 @@ from BGC import *
 class PickleBGC:
 
 	def storeBGC(self, bgc, dir):
-		with open(dir + '\\' + bgc.name + '.pickle', 'wb') as f:
+		with open(dir + bgc.name + '.pickle', 'wb') as f:
 			pickle.dump(bgc, f, pickle.HIGHEST_PROTOCOL)
 
 	def loadBGC(self, bgcName):

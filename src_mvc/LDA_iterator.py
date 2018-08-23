@@ -71,7 +71,11 @@ class LDA_iterator:
 
 			print('****** Computation of E - Step ******')
 			st = time.time()
-			self.runEStep(bgcList, dictionaries)
+			if self.binary==True:
+				print("The Binary Model is selected!")
+				self.runEStepBinary(bgcList, dictionaries)
+			else:
+				self.runEStep(bgcList, dictionaries)
 
 			em = time.time() - st
 			tm = time.gmtime(em)
