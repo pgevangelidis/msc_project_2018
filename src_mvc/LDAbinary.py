@@ -87,7 +87,7 @@ class LDA_model_binary:
 				# for i in range(self.kapa):
 				factor = scipy.special.digamma(bgc.gamma)
 				array = ((np.log(self.vita[row]+0.0001)*wd)+(1-wd)*np.log(1-self.vita[row]+0.0001))*np.exp(factor-factor_phi)
-			bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
+				bgc.phi[gene] = array/(np.sum(array)) # this normalising method satisfies the sum to 1
 
 
 				temp += bgc.phi[gene]

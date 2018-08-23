@@ -121,10 +121,10 @@ class MixtureModel:
 					else:
 						numerator = numerator*(1.0001 - self.vita[row_gene])
 				# print("post\n{}\n".format(numerator)) # The smoothness is for the divide by zero
-			print("numerator: {}".format(numerator))
-			print("pi {}".format(self.pi))
+			# print("numerator: {}".format(numerator))
+			# print("pi {}".format(self.pi))
 			self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
-			print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
+			# print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
 				
 			
 
