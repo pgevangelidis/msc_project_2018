@@ -17,7 +17,7 @@ class BGC_Dictionary:
 		self.row = 0
 		# mac path
 		directory = os.path.dirname(os.path.realpath(__file__))
-		self.path = directory + "/roduct_files/" #"\\product_files\\"
+		self.path = directory + "/product_files/" #"\\product_files\\"
 		folder = dirCheck()
 		folder.checkDir(self.path)
 

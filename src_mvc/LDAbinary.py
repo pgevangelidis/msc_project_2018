@@ -5,7 +5,7 @@ import numpy as np
 import scipy.special
 from BGC import *
 from BGC_Dictionary import *
-from lb_check import *
+# from lb_check import *
 import copy
 
 class LDA_model_binary:
@@ -19,7 +19,7 @@ class LDA_model_binary:
 		self.totalLBound = 0.0
 		self.totalLBound_pre = []
 		self.phi = np.full((g, self.kapa), 0.0001) # Initialise the whole matrix to a small value in order to avoid complications.
-		self.lbTester = lb_check()
+		# self.lbTester = lb_check()
 	##################################
 	#### Lower Bound #################
 	##################################
@@ -38,10 +38,10 @@ class LDA_model_binary:
 		partBE = bgc.partBE
 		partD = bgc.partD
 
-		#code added 29/8/2018
-		self.lbTester.partA.append(partA)
-		self.lbTester.partBE.append(partBE)
-		self.lbTester.partD.append(partD)
+		# #code added 29/8/2018
+		# self.lbTester.partA.append(partA)
+		# self.lbTester.partBE.append(partBE)
+		# self.lbTester.partD.append(partD)
 
 
 		for gene in dictionaries.geneDict.keys():
@@ -52,8 +52,8 @@ class LDA_model_binary:
 			else:
 				array = np.exp(scipy.special.digamma(bgc.gamma) - scipy.special.digamma(np.sum(bgc.gamma)))
 				partC += np.sum(((1 - self.vita[row])*array/np.sum((1 - self.vita[row])*array))*np.log(1 - self.vita[row]))
-		#added code 28/9/2018
-		self.lbTester.partC.append(partC)
+		# #added code 28/9/2018
+		# self.lbTester.partC.append(partC)
 
 		temp = partA+partBE+partC+partD
 		if np.isinf(temp):
@@ -70,11 +70,11 @@ class LDA_model_binary:
 		bgc.lbound = temp
 		self.totalLBound += temp
 
-		#added code 28/9/2018
-		self.lbTester.check_curve(self.lbTester.partA, "A")
-		self.lbTester.check_curve(self.lbTester.partBE, "BE")
-		self.lbTester.check_curve(self.lbTester.partC, "C")
-		self.lbTester.check_curve(self.lbTester.partD, "D")
+		# #added code 28/9/2018
+		# self.lbTester.check_curve(self.lbTester.partA, "A")
+		# self.lbTester.check_curve(self.lbTester.partBE, "BE")
+		# self.lbTester.check_curve(self.lbTester.partC, "C")
+		# self.lbTester.check_curve(self.lbTester.partD, "D")
 
 
 
@@ -86,23 +86,26 @@ class LDA_model_binary:
 
 		####### the algorithm #########
 		for bgc in bgcList:
+			print("{}\n".format(bgc.name))
 			bgc.gamma_pre = copy.deepcopy(bgc.gamma)
 
-			array = np.exp(scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre))) # this is the exponential gamma factor of the estep
+			psiGamma = (scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre))) # this is the exponential gamma factor of the estep
 			for gene in dictionaries.geneDict.keys():
 				row = dictionaries.geneDict[gene]
 				if gene in bgc.genes:
-					self.phi[row] = self.vita[row]*array/np.sum(self.vita[row]*array)
+					self.phi[row] = (self.vita[row]*np.exp(psiGamma))/np.sum(self.vita[row]*np.exp(psiGamma))
 					bgc.phi[gene] = copy.deepcopy(self.phi[row])
 				else:
-					self.phi[row] = (1 - self.vita[row])*array/np.sum((1 - self.vita[row])*array)
+					self.phi[row] = (1 - self.vita[row])*np.exp(psiGamma)/np.sum((1 - self.vita[row])*np.exp(psiGamma))
 
 				temp += self.phi[row]
 
 			bgc.gamma = self.alpha + temp
-
+			print("Enter part A.\n")
 			bgc.setPartA(self.alpha)
+			print("Enter part BE.\n")
 			bgc.binary_setPartBE(dictionaries.geneDict, self.vita)
+			print("Enter part D.\n")
 			bgc.setPartD()
 	##################################
 	##### M Step #####################
@@ -123,9 +126,9 @@ class LDA_model_binary:
 					numerator += bgc.phi[gene]
 					denominator += bgc.phi[gene]
 				else:
-					array = np.exp(scipy.special.digamma(bgc.gamma) - scipy.special.digamma(np.sum(bgc.gamma)))
-					denominator += (1 - self.vita_pre[row])*array/np.sum((1 - self.vita_pre[row])*array)
-			self.vita[row] = (0.000001 + numerator)/(0.0001+denominator)
+					psiGamma = (scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre)))
+					denominator += (1 - self.vita[row])*np.exp(psiGamma)/np.sum((1 - self.vita[row])*np.exp(psiGamma))
+			self.vita[row] = (0.0000001 + numerator)/(0.00001+denominator)
 
 
 	def normaliseVita(self):

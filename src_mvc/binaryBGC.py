@@ -84,20 +84,22 @@ class binaryBGC:
 	# This is also means that the algorithm will be singificantly slower.
 	def binary_setPartBE(self, geneDict, vita):
 		self.partBE = 0.0 
-		array = np.exp(scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma)))
+		psiGamma = scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma))
 		for gene in geneDict:
 			row = geneDict[gene]
 			if gene in self.genes:
-				self.partBE += np.sum(self.phi[gene]*(scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma))))
+				self.partBE += np.sum(self.phi[gene]*psiGamma)
 				self.partBE -= np.sum(self.phi[gene]*(np.log(self.phi[gene])))
 			else:
-				self.partBE += np.sum(((1 - vita[row])*array/np.sum((1 - vita[row])*array))*(scipy.special.digamma(self.gamma) - scipy.special.digamma(np.sum(self.gamma))))
-				self.partBE -= np.sum(((1 - vita[row])*array/np.sum((1 - vita[row])*array))*np.log((1 - vita[row])*array/np.sum((1 - vita[row])*array)))
+				tempPhi = (1 - vita[row])*np.exp(psiGamma)/np.sum((1 - vita[row])*np.exp(psiGamma))
+				self.partBE += (tempPhi)*(psiGamma)
+				self.partBE -= (tempPhi)*np.log(tempPhi)
 
 	def setPartD(self):
 		self.partD = 0.0
 		self.partD = (-1)*scipy.special.gammaln(np.sum(self.gamma))
+		constant = scipy.special.digamma(np.sum(self.gamma))
 		for i in range(self.gamma.shape[1]):
 			self.partD += scipy.special.gammaln(self.gamma[0][i])
-			self.partD -= (self.gamma[0][i] - 1)*(scipy.special.digamma(self.gamma[0][i]) - scipy.special.digamma(np.sum(self.gamma)))
+			self.partD -= (self.gamma[0][i] - 1)*(scipy.special.digamma(self.gamma[0][i]) - constant)
 

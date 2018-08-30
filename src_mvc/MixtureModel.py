@@ -3,6 +3,7 @@
 import numpy as np
 import copy
 import time
+from scipy import sparse
 import os
 from dirCheck import *
 from storeBGC import *
@@ -20,17 +21,13 @@ class MixtureModel:
 		self.pi = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
 		self.pi_pre = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
 		self.qiou = np.full((self.ni, self.kapa), (0.0001)) # This is the phi matrix similar to LDA
-		self.qiouApprox = np.full((self.ni, self.kapa), 0.0001)
-		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
-		self.vita = np.random.rand(self.di, self.kapa) # This is the equal vita matrix with the gene probabilities
+		self.vita_pre = np.zeros((self.kapa, self.di), dtype = float)
+		self.vita = np.random.rand(self.kapa, self.di) # This is the equal vita matrix with the gene probabilities
 		#This number is more like a safety number if the model cannot converge
 		self.iterations = 60
-		# mac path
+
 		directory = os.path.dirname(os.path.realpath(__file__))
 		self.path = directory + "/MM_files/"
-		# self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/MM_files/'
-		# windows path
-		# self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\MM_files'
 		folder = dirCheck()
 		folder.checkDir(self.path)
 		# part of the equation
@@ -42,9 +39,21 @@ class MixtureModel:
 		self.calcError = 0.0
 		self.calcError_pre = 0.0
 		self.sensitive = 0.01
+		self.row_ind = []
+		self.col_ind = []
+		self.mat_values = []
+		self.coo = []
+
+    # This method creates the sparse matrix
+	def setSparse(self):
+		for c in self.dictionaries.coordinates:
+			self.row_ind.append(c[0])
+			self.col_ind.append(c[1])
+			self.mat_values.append(1)
+		self.coo = sparse.coo_matrix((self.mat_values, (self.row_ind, self.col_ind))).toarray() # the dimensions are D x V.
 
 	def exportMM(self, loop):
-
+		
 		saveMixture = store_BGC(self.path, self.path)
 		saveMixture.saveLDA(self, loop)
 
@@ -66,30 +75,24 @@ class MixtureModel:
 	def MM_partA(self):
 # calculate part A of Lower Bound
 		self.partA = 0.0
-		for bgc in self.dictionaries.bgcDict.keys():
-			row_bgc = self.dictionaries.bgcDict[bgc]
-			self.partA += np.sum(self.qiou[row_bgc]*np.log(self.pi))
+		for i in range(self.qiou.shape[0]):
+			self.partA += np.sum(self.qiou[i]*np.log(self.pi))
 		
 	def MM_partB(self):
 		#calculating part B of Lower Bound
 		self.partB = 0.0
-		for bgc in self.dictionaries.bgcDict.keys():			
-			row_bgc = self.dictionaries.bgcDict[bgc] # return the row of bgc
-			array = np.zeros((1,self.kapa), dtype = float)
-			for gene in self.dictionaries.geneDict.keys():
-				row_gene = self.dictionaries.geneDict[gene] # returns the row of gene
-				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					array += (np.log(self.vita[row_gene]))
-				else:
-					array += (np.log(1 - self.vita[row_gene]))
-			self.partB += np.sum(self.qiou[row_bgc]*array) # this should return a scalar value. I hope.
+		for i in range(self.qiou.shape[0]):
+			temp = np.zeros((1,self.kapa))
+			for j in range(self.vita.shape[0]):
+				temp[0,j] = np.sum(((self.vita[j])**(self.coo[i]))*((1 - self.vita[j])**(1 - self.coo[i])))
+			temp = self.qiou[i]*temp
+			self.partB += np.sum(temp)
 
 	def MM_partC(self):
 		#calculating the part C of the lower bound
 		self.partC = 0.0
-		for bgc in self.dictionaries.bgcDict.keys():
-			row_bgc = self.dictionaries.bgcDict[bgc]
-			self.partC += np.sum(self.qiou[row_bgc]*np.log(self.qiou[row_bgc]))
+		for i in range(self.qiou.shape[0]):
+			self.partC += np.sum(self.qiou[i]*np.log(self.qiou[i]+0.0000001))
 
 
 	def MM_LBound(self):
@@ -103,55 +106,37 @@ class MixtureModel:
 
 	def MM_EStep(self):
 		# Updating the qiou
-		temp = 0.0
-		self.pi_pre = copy.deepcopy(self.pi)
-		for bgc in self.dictionaries.bgcDict.keys():
-			row_bgc = self.dictionaries.bgcDict[bgc]
-			log_numerator = np.zeros((1,self.kapa), dtype = float)
+		for i in range(self.vita.shape[0]): # this is actually kapa topics
+			for j in range(self.coo.shape[0]): # this is the BGC corpus
+				temp = ((self.vita[i])**(self.coo[j]))*((1 - self.vita[i])**(1 - self.coo[j]))
+				self.qiou[j][i] = self.pi[0,i]*np.prod(temp) # the dimensions are D x k. 
 
-			for gene in self.dictionaries.geneDict.keys(): # if the gene exists in the particular bgc then is 1 otherwise 0
-				row_gene = self.dictionaries.geneDict[gene] # this line returns the number of row for this gene
+		for i in range(self.qiou.shape[0]): # ok, this is the bgc
+			self.qiou[i] = (self.qiou[i] + 0.00000001)/(np.sum(self.qiou[i]) + 0.00001) # this line normalise the qiou and also applies the constraint to sum to 1
 
-				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					log_numerator += np.log(self.vita[row_gene] + 0.00001)
-				else:
-					log_numerator += np.log(1.00001 - self.vita[row_gene])
-
-			# print("numerator: {}\n".format(numerator))
-			# print("log_num {}\n".format((log_numerator)))
-			# print("num {}\n".format(np.exp(log_numerator)))
-			# if np.sum(self.pi_pre*(log_numerator))==0.0:
-			# 	self.qiou[row_bgc] = 0.0001
-			# 	print('BGC {}\trow number: {}\t the sum is close to zero.\t value: {}'.format(bgc, row_bgc, np.sum((log_numerator))))
-			# else:
-			self.qiou[row_bgc] = (self.pi_pre*(log_numerator))/np.sum(self.pi_pre*(log_numerator)) # This line normalise the qiou at the same time.
-			# self.qiou[row_bgc] = (self.qiou[row_bgc])/np.sum(self.qiou[row_bgc])
-			# print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
-				
-			temp += self.qiou[row_bgc]
-		print("show pi before: {}\n".format(self.pi))
-		self.pi = temp / self.ni # still a vector. 
-		# self.pi = self.pi / np.sum(self.pi) # Normalise to sum to 1.
-		print("Show pi: {} N: {}\n".format(self.pi, self.ni))
 
 
 	def MM_MStep(self):
 		# Updating vita
-		self.vita_pre = copy.deepcopy(self.vita)
+		denominator = np.zeros((1,self.kapa))
+		for i in range(self.qiou.shape[0]):
+			denominator += self.qiou[i]
 
-		for gene in self.dictionaries.geneDict.keys():
-			row_gene = self.dictionaries.geneDict[gene]
-			numerator = np.zeros((1,self.kapa), dtype = float)
-			denominator = np.zeros((1,self.kapa), dtype = float)
+		
+		cooT = self.coo.transpose() # the dimension now are V x D,  Genes x BGCs
 
-			for bgc in self.dictionaries.bgcDict.keys():
-				row_bgc = self.dictionaries.bgcDict[bgc]
+		numerator = np.zeros((1,self.kapa))
+		for i in range(self.vita.shape[1]):
+			for j in range(self.qiou.shape[1]):
+				numerator[0,j] = np.sum(self.qiou[:,j]*cooT[i])
+			self.vita[:,i] = (numerator + 0.0000001)/(denominator + 0.00001)
 
-				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					numerator += self.qiou[row_bgc]
+		# update pi as well
+		for i in range(self.qiou.shape[0]):
+			self.pi += self.qiou[i]
+		self.pi = self.pi/self.di
 
-				denominator += self.qiou[row_bgc]
-			self.vita[row_gene] = (numerator)/ (denominator + 0.00001) 
+
 
 	def MM_iterator(self):
 		# This method captures the iterations of EM algorithm which updates the values of the model
