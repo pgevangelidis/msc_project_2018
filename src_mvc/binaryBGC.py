@@ -92,8 +92,8 @@ class binaryBGC:
 				self.partBE -= np.sum(self.phi[gene]*(np.log(self.phi[gene])))
 			else:
 				tempPhi = (1 - vita[row])*np.exp(psiGamma)/np.sum((1 - vita[row])*np.exp(psiGamma))
-				self.partBE += (tempPhi)*(psiGamma)
-				self.partBE -= (tempPhi)*np.log(tempPhi)
+				self.partBE += np.sum((tempPhi)*(psiGamma))
+				self.partBE -= np.sum((tempPhi)*np.log(tempPhi))
 
 	def setPartD(self):
 		self.partD = 0.0

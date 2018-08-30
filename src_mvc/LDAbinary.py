@@ -82,12 +82,13 @@ class LDA_model_binary:
 	##### E Step #####################
 	##################################
 	def EStep(self, bgcList, dictionaries):
-		temp = np.zeros((1,self.kapa), dtype=float)
+		
 
 		####### the algorithm #########
 		for bgc in bgcList:
-			print("{}\n".format(bgc.name))
+			# print("{}\n".format(bgc.name))
 			bgc.gamma_pre = copy.deepcopy(bgc.gamma)
+			temp = np.zeros((1,self.kapa), dtype=float)
 
 			psiGamma = (scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre))) # this is the exponential gamma factor of the estep
 			for gene in dictionaries.geneDict.keys():
@@ -101,11 +102,11 @@ class LDA_model_binary:
 				temp += self.phi[row]
 
 			bgc.gamma = self.alpha + temp
-			print("Enter part A.\n")
+			# print("Enter part A.\n")
 			bgc.setPartA(self.alpha)
-			print("Enter part BE.\n")
+			# print("Enter part BE.\n")
 			bgc.binary_setPartBE(dictionaries.geneDict, self.vita)
-			print("Enter part D.\n")
+			# print("Enter part D.\n")
 			bgc.setPartD()
 	##################################
 	##### M Step #####################
@@ -116,7 +117,7 @@ class LDA_model_binary:
 		self.vita_pre = copy.deepcopy(self.vita)
 
 		for gene in dictionaries.geneDict.keys():
-			print("{}\n".format(gene))
+			# print("{}\n".format(gene))
 			row = dictionaries.geneDict[gene]
 
 			numerator = np.zeros((1,self.kapa), dtype=float)
@@ -130,7 +131,7 @@ class LDA_model_binary:
 					psiGamma = (scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre)))
 					denominator += (1 - self.vita[row])*np.exp(psiGamma)/np.sum((1 - self.vita[row])*np.exp(psiGamma))
 			self.vita[row] = (0.0000001 + numerator)/(0.00001+denominator)
-			print("row {}\t Done.\n".format(row))
+			# print("row {}\t Done.\n".format(row))
 
 
 	def normaliseVita(self):
