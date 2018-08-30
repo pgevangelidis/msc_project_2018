@@ -1,0 +1,41 @@
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+
+# Folders and bins #
+####################
+/src_mvc/genelist
+/src_mvc/NMF_files
+/src_mvc/pickle
+/src_mvc/product_files
+/src_mvc/MM_files
+/src_mvc/bgc_objects
+/src_mvc/lda_object
+/src_mvc/gbk_test
+/src_mvc/
