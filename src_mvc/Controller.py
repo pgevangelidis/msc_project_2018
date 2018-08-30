@@ -79,7 +79,7 @@ class Controller:
 
 		if(mode==6):
 			print('\nMixture Model\n')
-			self.mixModel = MixtureModel(self.dictionaries, 50, 0.01)
+			self.mixModel = MixtureModel(self.dictionaries, 50, 0.0000000001)
 			self.mixModel.MM_iterator()
 
 		

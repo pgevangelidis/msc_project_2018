@@ -18,12 +18,13 @@ class MixtureModel:
 		self.kapa = k
 		self.di = len(diction.geneDict.keys())
 		self.pi = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
+		self.pi_pre = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
 		self.qiou = np.full((self.ni, self.kapa), (0.0001)) # This is the phi matrix similar to LDA
 		self.qiouApprox = np.full((self.ni, self.kapa), 0.0001)
 		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
 		self.vita = np.random.rand(self.di, self.kapa) # This is the equal vita matrix with the gene probabilities
 		#This number is more like a safety number if the model cannot converge
-		self.iterations = 25
+		self.iterations = 60
 		# mac path
 		directory = os.path.dirname(os.path.realpath(__file__))
 		self.path = directory + "/MM_files/"
@@ -76,11 +77,11 @@ class MixtureModel:
 			row_bgc = self.dictionaries.bgcDict[bgc] # return the row of bgc
 			array = np.zeros((1,self.kapa), dtype = float)
 			for gene in self.dictionaries.geneDict.keys():
-				wd = 0
 				row_gene = self.dictionaries.geneDict[gene] # returns the row of gene
 				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					wd = 1
-				array += (wd*np.log(self.vita[row_gene]) + (1-wd)*np.log(1 - self.vita[row_gene]))
+					array += (np.log(self.vita[row_gene]))
+				else:
+					array += (np.log(1 - self.vita[row_gene]))
 			self.partB += np.sum(self.qiou[row_bgc]*array) # this should return a scalar value. I hope.
 
 	def MM_partC(self):
@@ -102,38 +103,36 @@ class MixtureModel:
 
 	def MM_EStep(self):
 		# Updating the qiou
+		temp = 0.0
+		self.pi_pre = copy.deepcopy(self.pi)
 		for bgc in self.dictionaries.bgcDict.keys():
 			row_bgc = self.dictionaries.bgcDict[bgc]
-			numerator = np.zeros((1,self.kapa), dtype = float)
-			# print("pre\n{}\n".format(numerator))
-			first = True
+			log_numerator = np.zeros((1,self.kapa), dtype = float)
+
 			for gene in self.dictionaries.geneDict.keys(): # if the gene exists in the particular bgc then is 1 otherwise 0
 				row_gene = self.dictionaries.geneDict[gene] # this line returns the number of row for this gene
-				# print(self.vita[row_gene])
-				if gene in self.dictionaries.bgcGeneDict[bgc]:
-					if first==True:
-						numerator = 1*(self.vita[row_gene])
-					else:
-						numerator = numerator*(self.vita[row_gene])
-				else:
-					if first==True:
-						numerator = 1*(1 - self.vita[row_gene])
-					else:
-						numerator = numerator*(1 - self.vita[row_gene])
-				first = False
-				# print("post\n{}\n".format(numerator)) # The smoothness is for the divide by zero
-			print("numerator: {}".format(numerator))
-			print("pi {}".format(self.pi))
-			self.qiou[row_bgc] = (self.pi * numerator) / np.sum(self.pi * numerator) # This line normalise the qiou at the same time.
-			print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
-				
-			
 
-		# Updating the pi
-		for bgc in self.dictionaries.bgcDict.keys():
-			row_bgc = self.dictionaries.bgcDict[bgc]
-			self.pi += self.qiou[row_bgc]
-		self.pi = self.pi / self.ni # still a vector. Normalised too.
+				if gene in self.dictionaries.bgcGeneDict[bgc]:
+					log_numerator += np.log(self.vita[row_gene] + 0.00001)
+				else:
+					log_numerator += np.log(1.00001 - self.vita[row_gene])
+
+			# print("numerator: {}\n".format(numerator))
+			# print("log_num {}\n".format((log_numerator)))
+			# print("num {}\n".format(np.exp(log_numerator)))
+			# if np.sum(self.pi_pre*(log_numerator))==0.0:
+			# 	self.qiou[row_bgc] = 0.0001
+			# 	print('BGC {}\trow number: {}\t the sum is close to zero.\t value: {}'.format(bgc, row_bgc, np.sum((log_numerator))))
+			# else:
+			self.qiou[row_bgc] = (self.pi_pre*(log_numerator))/np.sum(self.pi_pre*(log_numerator)) # This line normalise the qiou at the same time.
+			# self.qiou[row_bgc] = (self.qiou[row_bgc])/np.sum(self.qiou[row_bgc])
+			# print("BGC: {}\nqiou:\n{}".format(bgc,self.qiou[row_bgc]))
+				
+			temp += self.qiou[row_bgc]
+		print("show pi before: {}\n".format(self.pi))
+		self.pi = temp / self.ni # still a vector. 
+		# self.pi = self.pi / np.sum(self.pi) # Normalise to sum to 1.
+		print("Show pi: {} N: {}\n".format(self.pi, self.ni))
 
 
 	def MM_MStep(self):
@@ -152,13 +151,14 @@ class MixtureModel:
 					numerator += self.qiou[row_bgc]
 
 				denominator += self.qiou[row_bgc]
-			self.vita[row_gene] = (numerator + 0.00001)/ (denominator + 0.0005) 
+			self.vita[row_gene] = (numerator)/ (denominator + 0.00001) 
 
 	def MM_iterator(self):
 		# This method captures the iterations of EM algorithm which updates the values of the model
 		start_time = time.time()
 		flag = False
 		loop = 0
+		# print('vita initial: {}\n'.format(self.vita))
 		while(flag!=True):
 			print('loop {}\n'.format(loop))
 			print('\n***** Computation of E - Step *****\n')
@@ -170,12 +170,18 @@ class MixtureModel:
 			self.MM_LBound()
 
 			self.calcError_pre = copy.deepcopy(self.calcError)
-			self.calcError = np.abs(self.totalLBound - self.totalLBound_pre[-1])
-			sensitive = np.abs(self.calcError - self.calcError_pre)
+			self.calcError = np.square(np.power((self.totalLBound - self.totalLBound_pre[-1]), 2))
 
-			if ((self.calcError <= self.error) and (sensitive <= self.error)) or (loop == self.iterations):
+			if (self.totalLBound - self.totalLBound_pre[-1]) > 0:
+				print("__\n /|\n/")
+			else:
+				print("  |\n _|_\n \\ /\n  v")
+
+			# sensitive = np.abs(self.calcError - self.calcError_pre)
+
+			if (self.calcError <= self.error) or (loop == self.iterations):
 				flag = True
-			print('calcError: {}\t sensitive: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.calcError, sensitive, self.error, loop, self.iterations))
+			print('Lower bound:\nPre: {}\tPost:{}\ncalcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.totalLBound,self.totalLBound_pre[-1], self.calcError, self.error, loop, self.iterations))
 			loop += 1
 		loop -= 1
 		print('The convergence needed {} loops'.format(loop))

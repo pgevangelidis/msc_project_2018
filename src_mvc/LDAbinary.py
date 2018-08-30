@@ -5,6 +5,7 @@ import numpy as np
 import scipy.special
 from BGC import *
 from BGC_Dictionary import *
+from lb_check import *
 import copy
 
 class LDA_model_binary:
@@ -18,7 +19,7 @@ class LDA_model_binary:
 		self.totalLBound = 0.0
 		self.totalLBound_pre = []
 		self.phi = np.full((g, self.kapa), 0.0001) # Initialise the whole matrix to a small value in order to avoid complications.
-
+		self.lbTester = lb_check()
 	##################################
 	#### Lower Bound #################
 	##################################
@@ -37,6 +38,11 @@ class LDA_model_binary:
 		partBE = bgc.partBE
 		partD = bgc.partD
 
+		#code added 29/8/2018
+		self.lbTester.partA.append(partA)
+		self.lbTester.partBE.append(partBE)
+		self.lbTester.partD.append(partD)
+
 
 		for gene in dictionaries.geneDict.keys():
 			row = dictionaries.geneDict[gene]
@@ -44,10 +50,10 @@ class LDA_model_binary:
 			if gene in bgc.genes:
 				partC += np.sum(bgc.phi[gene]*np.log(self.vita[row]))
 			else:
-				factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
-				array = np.exp(scipy.special.digamma(bgc.gamma) - factor_phi)
-				partC += np.sum(array*np.log(1 - self.vita[row]))
-
+				array = np.exp(scipy.special.digamma(bgc.gamma) - scipy.special.digamma(np.sum(bgc.gamma)))
+				partC += np.sum(((1 - self.vita[row])*array/np.sum((1 - self.vita[row])*array))*np.log(1 - self.vita[row]))
+		#added code 28/9/2018
+		self.lbTester.partC.append(partC)
 
 		temp = partA+partBE+partC+partD
 		if np.isinf(temp):
@@ -64,20 +70,25 @@ class LDA_model_binary:
 		bgc.lbound = temp
 		self.totalLBound += temp
 
+		#added code 28/9/2018
+		self.lbTester.check_curve(self.lbTester.partA, "A")
+		self.lbTester.check_curve(self.lbTester.partBE, "BE")
+		self.lbTester.check_curve(self.lbTester.partC, "C")
+		self.lbTester.check_curve(self.lbTester.partD, "D")
+
 
 
 	##################################
 	##### E Step #####################
 	##################################
 	def EStep(self, bgcList, dictionaries):
-		temp = np.zeros((1,50), dtype=float)
+		temp = np.zeros((1,self.kapa), dtype=float)
 
 		####### the algorithm #########
 		for bgc in bgcList:
 			bgc.gamma_pre = copy.deepcopy(bgc.gamma)
 
-			factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
-			array = np.exp(scipy.special.digamma(bgc.gamma) - factor_phi) # this is the exponential gamma factor of the estep
+			array = np.exp(scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre))) # this is the exponential gamma factor of the estep
 			for gene in dictionaries.geneDict.keys():
 				row = dictionaries.geneDict[gene]
 				if gene in bgc.genes:
@@ -112,10 +123,9 @@ class LDA_model_binary:
 					numerator += bgc.phi[gene]
 					denominator += bgc.phi[gene]
 				else:
-					factor_phi = scipy.special.digamma(np.sum(bgc.gamma))
-					array = np.exp(scipy.special.digamma(bgc.gamma) - factor_phi)
+					array = np.exp(scipy.special.digamma(bgc.gamma) - scipy.special.digamma(np.sum(bgc.gamma)))
 					denominator += (1 - self.vita_pre[row])*array/np.sum((1 - self.vita_pre[row])*array)
-			self.vita[row] = (numerator)/(0.000001+denominator)
+			self.vita[row] = (0.000001 + numerator)/(0.0001+denominator)
 
 
 	def normaliseVita(self):
