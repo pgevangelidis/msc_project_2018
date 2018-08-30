@@ -30,12 +30,11 @@
 
 # Folders and bins #
 ####################
-/src_mvc/genelist
-/src_mvc/NMF_files
-/src_mvc/pickle
-/src_mvc/product_files
-/src_mvc/MM_files
-/src_mvc/bgc_objects
-/src_mvc/lda_object
-/src_mvc/gbk_test
-/src_mvc/
+genelist/
+NMF_files/
+pickle/
+product_files/
+MM_files/
+bgc_objects/
+lda_object/
+gbk_test/
