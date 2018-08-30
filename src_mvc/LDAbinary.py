@@ -116,6 +116,7 @@ class LDA_model_binary:
 		self.vita_pre = copy.deepcopy(self.vita)
 
 		for gene in dictionaries.geneDict.keys():
+			print("{}\n".format(gene))
 			row = dictionaries.geneDict[gene]
 
 			numerator = np.zeros((1,self.kapa), dtype=float)
@@ -129,6 +130,7 @@ class LDA_model_binary:
 					psiGamma = (scipy.special.digamma(bgc.gamma_pre) - scipy.special.digamma(np.sum(bgc.gamma_pre)))
 					denominator += (1 - self.vita[row])*np.exp(psiGamma)/np.sum((1 - self.vita[row])*np.exp(psiGamma))
 			self.vita[row] = (0.0000001 + numerator)/(0.00001+denominator)
+			print("row {}\t Done.\n".format(row))
 
 
 	def normaliseVita(self):
