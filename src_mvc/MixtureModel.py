@@ -18,9 +18,9 @@ class MixtureModel:
 		self.ni = len(diction.bgcDict.keys()) 
 		self.kapa = k
 		self.di = len(diction.geneDict.keys())
-		self.pi = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
-		self.pi_pre = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
-		self.qiou = np.full((self.ni, self.kapa), (0.0001)) # This is the phi matrix similar to LDA
+		self.pi = np.full((1,self.kapa), (1.0/self.kapa), dtype = float) # this is the phi parameter 
+		self.pi_pre = np.full((1,self.kapa), (1.0/self.kapa), dtype = float) # this is the phi parameter 
+		self.qiou = np.full((self.ni, self.kapa), (0.0001), dtype = float) # This is the phi matrix similar to LDA
 		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
 		self.vita = np.random.rand(self.di, self.kapa) # This is the equal vita matrix with the gene probabilities
 		#This number is more like a safety number if the model cannot converge
@@ -106,34 +106,38 @@ class MixtureModel:
 
 	def MM_EStep(self):
 		# Updating the qiou
-		for i in range(self.qiou.shape[0]): # this is actually kapa topics
+		for i in range(self.qiou.shape[0]): # this is actually bgc 
+			prod_vector = np.zeros((1,self.kapa), dtype = float)
+			sum_vector = np.zeros((1,self.kapa), dtype = float)
 			for j in range(self.qiou.shape[1]): # this is the BGC corpus
 				temp = ((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i]))
-				self.qiou[i][j] = self.pi[0,j]*np.prod(temp) # the dimensions are D x k. 
-		print("Pre update qiou: {}".format(self.qiou[0]))
-		for i in range(self.qiou.shape[0]): # ok, this is the bgc
-			self.qiou[i] = (self.qiou[i] + 0.00000001)/(np.sum(self.qiou[i]) + 0.00001) # this line normalise the qiou and also applies the constraint to sum to 1
-		print("Post updat: {}".format(self.qiou[0]))
+				prod_vector[0,j] = np.exp(np.log(self.pi[0,j]) + np.sum(np.log(temp))) # the dimensions are D x k. 
+				sum_vector[0,j] = np.sum(np.log(temp))
+			# print("iter {}\t prod_vector: {}\n".format(i, prod_vector))
+			reduce_factor = np.log(np.sum(prod_vector))
+
+			for j in range(self.qiou.shape[1]):
+				self.qiou[i][j] = np.exp(np.log(self.pi[0,j]) + sum_vector[0,j] - reduce_factor)
 
 
 	def MM_MStep(self):
 		# Updating vita
-		denominator = np.zeros((1,self.kapa))
+		denominator = np.zeros((1,self.kapa), dtype = float)
 		for i in range(self.qiou.shape[0]):
 			denominator += self.qiou[i]
 
-		numerator = np.zeros((1,self.kapa))
+		numerator = np.zeros((1,self.kapa), dtype = float)
 		for i in range(self.vita.shape[0]):
 			for j in range(self.qiou.shape[1]):
 				numerator[0,j] = np.sum(self.qiou[:,j]*self.coo[:,i])
-			self.vita[i] = (numerator + 0.0000001)/(denominator + 0.00001)
+			self.vita[i] = np.exp(np.log(numerator) - np.log(denominator))
 
 		# update pi as well
-		print("Pi pre updtaing: {}\n".format(self.pi))
+		# print("Pi pre updtaing: {}\n".format(self.pi))
 		for i in range(self.qiou.shape[0]):
 			self.pi += self.qiou[i]
-		self.pi = self.pi/self.di
-		print("Pi post: {}\n".format(self.pi))
+		self.pi = np.exp(np.log(self.pi) - np.log(self.di))
+		# print("Pi post: {}\n".format(self.pi))
 
 
 	def MM_iterator(self):
