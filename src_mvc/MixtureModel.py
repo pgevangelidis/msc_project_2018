@@ -21,10 +21,10 @@ class MixtureModel:
 		self.pi = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
 		self.pi_pre = np.full((1,self.kapa), (1.0/self.kapa)) # this is the phi parameter 
 		self.qiou = np.full((self.ni, self.kapa), (0.0001)) # This is the phi matrix similar to LDA
-		self.vita_pre = np.zeros((self.kapa, self.di), dtype = float)
-		self.vita = np.random.rand(self.kapa, self.di) # This is the equal vita matrix with the gene probabilities
+		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
+		self.vita = np.random.rand(self.di, self.kapa) # This is the equal vita matrix with the gene probabilities
 		#This number is more like a safety number if the model cannot converge
-		self.iterations = 60
+		self.iterations = 3
 
 		directory = os.path.dirname(os.path.realpath(__file__))
 		self.path = directory + "/MM_files/"
@@ -83,8 +83,8 @@ class MixtureModel:
 		self.partB = 0.0
 		for i in range(self.qiou.shape[0]):
 			temp = np.zeros((1,self.kapa))
-			for j in range(self.vita.shape[0]):
-				temp[0,j] = np.sum(((self.vita[j])**(self.coo[i]))*((1 - self.vita[j])**(1 - self.coo[i])))
+			for j in range(self.qiou.shape[1]):
+				temp[0,j] = np.sum(((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i])))
 			temp = self.qiou[i]*temp
 			self.partB += np.sum(temp)
 
@@ -106,14 +106,14 @@ class MixtureModel:
 
 	def MM_EStep(self):
 		# Updating the qiou
-		for i in range(self.vita.shape[0]): # this is actually kapa topics
-			for j in range(self.coo.shape[0]): # this is the BGC corpus
-				temp = ((self.vita[i])**(self.coo[j]))*((1 - self.vita[i])**(1 - self.coo[j]))
-				self.qiou[j][i] = self.pi[0,i]*np.prod(temp) # the dimensions are D x k. 
-
+		for i in range(self.qiou.shape[0]): # this is actually kapa topics
+			for j in range(self.qiou.shape[1]): # this is the BGC corpus
+				temp = ((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i]))
+				self.qiou[i][j] = self.pi[0,j]*np.prod(temp) # the dimensions are D x k. 
+		print("Pre update qiou: {}".format(self.qiou[0]))
 		for i in range(self.qiou.shape[0]): # ok, this is the bgc
 			self.qiou[i] = (self.qiou[i] + 0.00000001)/(np.sum(self.qiou[i]) + 0.00001) # this line normalise the qiou and also applies the constraint to sum to 1
-
+		print("Post updat: {}".format(self.qiou[0]))
 
 
 	def MM_MStep(self):
@@ -122,20 +122,18 @@ class MixtureModel:
 		for i in range(self.qiou.shape[0]):
 			denominator += self.qiou[i]
 
-		
-		cooT = self.coo.transpose() # the dimension now are V x D,  Genes x BGCs
-
 		numerator = np.zeros((1,self.kapa))
-		for i in range(self.vita.shape[1]):
+		for i in range(self.vita.shape[0]):
 			for j in range(self.qiou.shape[1]):
-				numerator[0,j] = np.sum(self.qiou[:,j]*cooT[i])
-			self.vita[:,i] = (numerator + 0.0000001)/(denominator + 0.00001)
+				numerator[0,j] = np.sum(self.qiou[:,j]*self.coo[:,i])
+			self.vita[i] = (numerator + 0.0000001)/(denominator + 0.00001)
 
 		# update pi as well
+		print("Pi pre updtaing: {}\n".format(self.pi))
 		for i in range(self.qiou.shape[0]):
 			self.pi += self.qiou[i]
 		self.pi = self.pi/self.di
-
+		print("Pi post: {}\n".format(self.pi))
 
 
 	def MM_iterator(self):
