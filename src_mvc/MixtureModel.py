@@ -7,6 +7,8 @@ from scipy import sparse
 import os
 from dirCheck import *
 from storeBGC import *
+import warnings
+warnings.filterwarnings("error")
 
 class MixtureModel:
 
@@ -116,15 +118,18 @@ class MixtureModel:
 	def MM_EStep(self):
 		# Updating the qiou
 		for i in range(self.qiou.shape[0]): # this is actually bgc 
-			prod_vector = np.zeros((1,self.kapa), dtype = float)
-			sum_vector = np.zeros((1,self.kapa), dtype = float)
-			for j in range(self.qiou.shape[1]): # this is the BGC corpus
-				temp = ((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i]))
-				sum_vector[0,j] = np.log(self.pi[0,j]) + np.sum(np.log(temp))
-			amax = np.amax(sum_vector)
-			prod_vector = sum_vector - amax # this is the maximum value of the vector.
-			# print("prod vector min {}\tprod vector max {}\tsum vector min {}\tsum vector max {}".format(np.amin(prod_vector), np.amax(prod_vector), np.amin(sum_vector), amax))
-			reduce_factor = amax + np.log(np.sum(np.exp(prod_vector)))
+			try:
+				prod_vector = np.zeros((1,self.kapa), dtype = float)
+				sum_vector = np.zeros((1,self.kapa), dtype = float)
+				for j in range(self.qiou.shape[1]): # this is the BGC corpus
+					temp = ((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i]))
+					sum_vector[0,j] = np.log(self.pi[0,j]) + np.sum(np.log(temp))
+				amax = np.amax(sum_vector)
+				prod_vector = sum_vector - amax # this is the maximum value of the vector.
+				# print("prod vector min {}\tprod vector max {}\tsum vector min {}\tsum vector max {}".format(np.amin(prod_vector), np.amax(prod_vector), np.amin(sum_vector), amax))
+				reduce_factor = amax + np.log(np.sum(np.exp(prod_vector)))
+			except RuntimeWarning:
+				print("reduce_factor min: {} max: {}".format(np.amin(prod_vector), np.amax(prod_vector)))
 
 			for j in range(self.qiou.shape[1]):
 				if np.exp(sum_vector[0,j] - reduce_factor) < 0.0001:
@@ -195,7 +200,6 @@ class MixtureModel:
 			st = time.time()
 			print('\n***** Computation of Lower Bound *****\n')
 			self.MM_LBound()
-			self.MM_MStep()
 			em = time.time() - st
 			tm = time.gmtime(em)
 			self.time_status(loop, tm.tm_hour, tm.tm_min, tm.tm_sec, 3)
@@ -212,7 +216,7 @@ class MixtureModel:
 
 			if (self.calcError <= self.error) or (loop == self.iterations):
 				flag = True
-			print('Lower bound:\nPre: {}\tPost:{}\ncalcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.totalLBound[-1],self.totalLBound_pre, self.calcError, self.error, loop, self.iterations))
+			print('Lower bound:\nPre: {}\tPost:{}\ncalcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.totalLBound, self.totalLBound_pre[-1], self.calcError, self.error, loop, self.iterations))
 			loop += 1
 		loop -= 1
 		print('The convergence needed {} loops'.format(loop))

@@ -95,4 +95,6 @@ if __name__ == "__main__":
 		
 		loop += 1
 	print(vita[3])
+	print(vita[457])
 	print(vita[224])
+	print(vita[33])
