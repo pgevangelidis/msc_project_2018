@@ -88,22 +88,22 @@ if __name__ == "__main__":
 
 	dictionary = {}
 	### Open the bgc dictionary and create a style with the genes ###
-	gene_path = r"C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\product_files\Gene_dictionary.txt"
-	try:
-		genes = open(gene_path, "r")
-		next(genes)
-		for line in genes:
-			temp_list = re.split(r"(\-->)", line)
-			#print(temp_list[0])
-			temp_int = re.split(r"(\n)", temp_list.pop())[0]
-			#print(int(temp_int))
-			dictionary.update({int(temp_int) : temp_list[0]})
-			# print(dictionary)
-	except:
-		print("Dictionary, this name does not exist.")
+	gene_path = r"/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/product_files/Gene_dictionary.txt"
+	# try:
+	genes = open(gene_path, "r")
+	next(genes)
+	for line in genes:
+		temp_list = re.split(r"(\-->)", line)
+		#print(temp_list[0])
+		temp_int = re.split(r"(\n)", temp_list.pop())[0]
+		#print(int(temp_int))
+		dictionary.update({int(temp_int) : temp_list[0]})
+		# print(dictionary)
+# except:
+	# 	print("Dictionary, this name does not exist.")
 
-	binary_bgc_path = r"C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\lda_objects_binary"
-	bgc_path = r"C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\lda_objetcs"
+	binary_bgc_path = r"/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_objects_binary"
+	bgc_path = r"/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_objetcs"
 
 	#############################
 	output_binary = 'bgc_topic_lda_binary_vita.csv'
@@ -117,6 +117,9 @@ if __name__ == "__main__":
 	# loop through text files:
 	gene = ""
 	print('Processing...\nPlease wait...\n')
+
+	vector_array = np.zeros((1,50))
+	vector_list = []
 	for filename in glob.glob(os.path.join(binary_bgc_path, 'vita_loop_40.txt')):
 
 		with open(filename, 'r') as f:
@@ -127,41 +130,69 @@ if __name__ == "__main__":
 					gene = dictionary[key]
 					print(gene)
 					style_handler.write('{},gene\n'.format(gene))
-				
-				temp = re.split(r"(\[\])+", line)
-				print(temp)
-				
-				values = temp
-				print(values)
-				values = list(map(float, values))
-				vector = np.asarray(values)
-				vector = vector/np.sum(vector)
-				for i in range(vector.shape[0]):
-					if (vector[i]>(np.amax(vector) - 0.005*np.amax(vector))):
-						file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector[i]))
+					# this vector will hold the values of each row, and every time it sees a "[" it will reset.
+					vector_array = np.zeros((1,50))
+					vector_list = []
+					# from this line I am interested for the second part
+					temp = re.split(r"[\[\t\r\n\]\s]", line)
+					for i in range(len(temp)):
+						if temp[i] != "":
+							vector_list.append(float(temp[i]))
+							# print(temp[i])
+				else:
+					temp = re.split(r"[\[\t\r\n\]\s]", line)
+					for i in range(len(temp)):
+						if temp[i] != "":
+							vector_list.append(float(temp[i]))
+							# print(temp[i])
+					if "]" in line:
+						temp = re.split(r"[\[\t\r\n\]\s]", line)
+						for i in range(len(temp)):
+							if temp[i] != "":
+								vector_list.append(float(temp[i]))
+
+						vector_array = np.asarray(vector_list)
+						vector_array = vector_array/np.sum(vector_array)
+						for i in range(vector_array.shape[0]):
+							if (vector_array[i]>(np.amax(vector_array) - 0.005*np.amax(vector_array))):
+								file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
 
 	# This is necessary for the second directory. The one with the binary bgcs
 	for filename in glob.glob(os.path.join(bgc_path, 'vita_loop_60.txt')):
-		try:
-			with open(filename, 'r') as f:
-				for line in f:
-					next(f)
-				for line in f:
+		with open(filename, 'r') as f:
+			for line in f:
+				if "[" in line:
 					key = int(line.split()[0])
 					gene = dictionary[key]
-
-					values = line.split()[1]
+					print(gene)
 					style_handler.write('{},gene\n'.format(gene))
+					# this vector will hold the values of each row, and every time it sees a "[" it will reset.
+					vector_array = np.zeros((1,50))
+					vector_list = []
+					# from this line I am interested for the second part
+					temp = re.split(r"[\[\t\r\n\]\s]", line)
+					for i in range(len(temp)):
+						if temp[i] != "":
+							vector_list.append(float(temp[i]))
+							# print(temp[i])
+				else:
+					temp = re.split(r"[\[\t\r\n\]\s]", line)
+					for i in range(len(temp)):
+						if temp[i] != "":
+							vector_list.append(float(temp[i]))
+							# print(temp[i])
+					if "]" in line:
+						temp = re.split(r"[\[\t\r\n\]\s]", line)
+						for i in range(len(temp)):
+							if temp[i] != "":
+								vector_list.append(float(temp[i]))
 
-					values = list(map(float, values))
-					vector = np.asarray(values)
-					vector = vector/np.sum(vector)
-					for i in range(vector.shape[0]):
-						if (vector[i]>(np.amax(vector) - 0.005*np.amax(vector))):
-							file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector[i]))
-				
-		except:
-			print('This name does not exist.')
+						vector_array = np.asarray(vector_list)
+						vector_array = vector_array/np.sum(vector_array)
+						for i in range(vector_array.shape[0]):
+							if (vector_array[i]>(np.amax(vector_array) - 0.005*np.amax(vector_array))):
+								file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
+
 
 	style_handler.close()
 	file_handler_a.close()
