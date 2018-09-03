@@ -24,7 +24,7 @@ class MixtureModel:
 		self.vita_pre = np.zeros((self.di, self.kapa), dtype = float)
 		self.vita = np.random.rand(self.di, self.kapa) # This is the equal vita matrix with the gene probabilities
 		#This number is more like a safety number if the model cannot converge
-		self.iterations = 3
+		self.iterations = 2
 
 		directory = os.path.dirname(os.path.realpath(__file__))
 		self.path = directory + "/MM_files/"
@@ -102,7 +102,16 @@ class MixtureModel:
 		self.MM_partB()
 		self.MM_partC() 
 		self.totalLBound = self.partA + self.partB - self.partC
- 
+
+	def time_status(self, loop, hour, min, sec, s):
+		if(s==1):
+			self.step = "E - Step"
+		if(s==2):
+			self.step = "M - Step"
+		if(s==3):
+			self.step = "Lower Bound"
+
+		print('{}. Computation of {} is done.\nloop: {}, time: {}:{}:{}\n'.format(s, self.step, loop, hour, min, sec))
 
 	def MM_EStep(self):
 		# Updating the qiou
@@ -111,29 +120,44 @@ class MixtureModel:
 			sum_vector = np.zeros((1,self.kapa), dtype = float)
 			for j in range(self.qiou.shape[1]): # this is the BGC corpus
 				temp = ((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i]))
-				prod_vector[0,j] = np.exp(np.log(self.pi[0,j]) + np.sum(np.log(temp))) # the dimensions are D x k. 
-				sum_vector[0,j] = np.sum(np.log(temp))
-			# print("iter {}\t prod_vector: {}\n".format(i, prod_vector))
-			reduce_factor = np.log(np.sum(prod_vector))
+				sum_vector[0,j] = np.log(self.pi[0,j]) + np.sum(np.log(temp))
+			amax = np.amax(sum_vector)
+			prod_vector = sum_vector - amax # this is the maximum value of the vector.
+			# print("prod vector min {}\tprod vector max {}\tsum vector min {}\tsum vector max {}".format(np.amin(prod_vector), np.amax(prod_vector), np.amin(sum_vector), amax))
+			reduce_factor = amax + np.log(np.sum(np.exp(prod_vector)))
 
 			for j in range(self.qiou.shape[1]):
-				self.qiou[i][j] = np.exp(np.log(self.pi[0,j]) + sum_vector[0,j] - reduce_factor)
-
+				if np.exp(sum_vector[0,j] - reduce_factor) < 0.0001:
+					self.qiou[i][j] = 0.0001
+				else:
+					self.qiou[i][j] = np.exp(sum_vector[0,j] - reduce_factor)
+			self.qiou[i] = self.qiou[i]/np.sum(self.qiou[i])
 
 	def MM_MStep(self):
 		# Updating vita
-		denominator = np.zeros((1,self.kapa), dtype = float)
-		for i in range(self.qiou.shape[0]):
-			denominator += self.qiou[i]
-
+		denominator = np.zeros((1,self.kapa), dtype = float)		
 		numerator = np.zeros((1,self.kapa), dtype = float)
+
 		for i in range(self.vita.shape[0]):
 			for j in range(self.qiou.shape[1]):
-				numerator[0,j] = np.sum(self.qiou[:,j]*self.coo[:,i])
-			self.vita[i] = np.exp(np.log(numerator) - np.log(denominator))
+				# the numerator
+				num_zero = self.qiou[:,j]*self.coo[:,i]
+				numerator = np.log(num_zero[num_zero != 0])
+				nmax = np.amax(numerator)
+				numer_max = numerator - nmax
+				num_factor = nmax + np.log(np.sum(np.exp(numer_max)))
+				# the denominator
+				denominator = np.log(self.qiou[:,j])
+				dmax = np.amax(denominator)
+				denom_max = denominator - dmax
+				reduce_factor = dmax + np.log(np.sum(np.exp(denom_max)))
+				# updating vita
+				if np.exp(num_factor - reduce_factor) < 0.0001:
+					self.vita[i,j] = 0.0001
+				else:
+					self.vita[i,j] = np.exp(num_factor - reduce_factor) 
 
 		# update pi as well
-		# print("Pi pre updtaing: {}\n".format(self.pi))
 		for i in range(self.qiou.shape[0]):
 			self.pi += self.qiou[i]
 		self.pi = np.exp(np.log(self.pi) - np.log(self.di))
@@ -142,22 +166,42 @@ class MixtureModel:
 
 	def MM_iterator(self):
 		# This method captures the iterations of EM algorithm which updates the values of the model
+		np.seterr(all = "warn" )
 		start_time = time.time()
 		flag = False
 		loop = 0
 		# print('vita initial: {}\n'.format(self.vita))
 		while(flag!=True):
+			print("\n**************\n")
+			print("\n***loop: {}***\n".format(loop))
+			print("\n**************\n")
+
+			st = time.time()
 			print('loop {}\n'.format(loop))
 			print('\n***** Computation of E - Step *****\n')
 			self.MM_EStep()
+			em = time.time() - st
+			tm = time.gmtime(em)
+			self.time_status(loop, tm.tm_hour, tm.tm_min, tm.tm_sec, 1)
+
+			st = time.time()
 			print('\n***** Computation of M - Step *****\n')
 			print('This will take some time')
 			self.MM_MStep()
+			em = time.time() - st
+			tm = time.gmtime(em)
+			self.time_status(loop, tm.tm_hour, tm.tm_min, tm.tm_sec, 2)
+
+			st = time.time()
 			print('\n***** Computation of Lower Bound *****\n')
 			self.MM_LBound()
+			self.MM_MStep()
+			em = time.time() - st
+			tm = time.gmtime(em)
+			self.time_status(loop, tm.tm_hour, tm.tm_min, tm.tm_sec, 3)
 
 			self.calcError_pre = copy.deepcopy(self.calcError)
-			self.calcError = np.square(np.power((self.totalLBound - self.totalLBound_pre[-1]), 2))
+			self.calcError = np.abs(self.totalLBound - self.totalLBound_pre[-1])
 
 			if (self.totalLBound - self.totalLBound_pre[-1]) > 0:
 				print("__\n /|\n/")
@@ -168,7 +212,7 @@ class MixtureModel:
 
 			if (self.calcError <= self.error) or (loop == self.iterations):
 				flag = True
-			print('Lower bound:\nPre: {}\tPost:{}\ncalcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.totalLBound,self.totalLBound_pre[-1], self.calcError, self.error, loop, self.iterations))
+			print('Lower bound:\nPre: {}\tPost:{}\ncalcError: {}\t error: {}\nloop: {}\t iteration: {}\n'.format(self.totalLBound[-1],self.totalLBound_pre, self.calcError, self.error, loop, self.iterations))
 			loop += 1
 		loop -= 1
 		print('The convergence needed {} loops'.format(loop))
