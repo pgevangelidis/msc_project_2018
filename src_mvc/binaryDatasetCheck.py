@@ -49,6 +49,16 @@ class BinaryCheck:
 		print("The genes that exist in more than one BGC are: {} {}%".format(multiple_genes, round(multiple_genes*100.0/total_genes, 2)))
 		print("The genes that exist more than once in a single BGC are: {} {}%".format(double_genes, round(double_genes*100.0/total_genes, 2)))
 
+		for item in self.multipleList:
+			counter = 0
+			for sec_item in self.doubleList:
+				# print("{} == {}".format(item[0], sec_item[1]))
+				if item[0]==sec_item[1]:
+					counter += 1
+
+		print("The union of multiple and duplicate genes: {}".format(round(counter*100.0/double_genes, 2)))
+
+
 	def runCheck(self):
 		self.runCheckForDoubles()
 		self.runCheckForMultiples()
