@@ -32,63 +32,64 @@ if __name__ == "__main__":
 	style_handler.write('name,type\n')
 
 	# loop through text files:
-	# numFiles = 0
-	# bgcName = ""
-	# print('Processing...\nPlease wait...\n')
-	# for filename in glob.glob(os.path.join(binary_bgc_path, '*.txt')):
-	# 	try:
-	# 		with open(filename, 'r') as f:
-	# 			for line in f:
-	# 				if 'name:' in line:
-	# 					bgcName = line.split()[1]
-	# 					style_handler.write('{},BGC\n'.format(bgcName))
-	# 				if 'gamma:' in line:
-	# 					t = next(f).split()
-	# 					t = list(map(float, t))
-	# 					gamma = np.asarray(t)
-	# 					gamma = gamma/np.sum(gamma)
-	# 					for i in range(gamma.shape[0]):
-	# 						if (gamma[i]>(np.amax(gamma) - 0.03*np.amax(gamma))):
-	# 							file_handler_a.write('{},topic{},{}\n'.format(bgcName,(i+1),gamma[i]))
-	# 					break
-	# 			numFiles+=1
+	numFiles = 0
+	bgcName = ""
+	print('Processing...\nPlease wait...\n')
+	for filename in glob.glob(os.path.join(binary_bgc_path, '*.txt')):
+		try:
+			with open(filename, 'r') as f:
+				for line in f:
+					if 'name:' in line:
+						bgcName = line.split()[1]
+						style_handler.write('{},BGC\n'.format(bgcName))
+					if 'gamma:' in line:
+						t = next(f).split()
+						t = list(map(float, t))
+						gamma = np.asarray(t)
+						gamma = gamma/np.sum(gamma)
+						for i in range(gamma.shape[0]):
+							if (gamma[i]>(np.amax(gamma) - 0.03*np.amax(gamma))):
+								file_handler_a.write('{},topic{},{}\n'.format(bgcName,(i+1),gamma[i]))
+						break
+				numFiles+=1
 				
-	# 	except:
-	# 		print('This name does not exist.')
-	# # This is necessary for the second directory. The one with the binary bgcs
-	# numFiles = 0
-	# bgcName = ""
-	# for filename in glob.glob(os.path.join(bgc_path, '*.txt')):
-	# 	try:
-	# 		with open(filename, 'r') as f:
-	# 			for line in f:
-	# 				if 'name:' in line:
-	# 					bgcName = line.split()[1]
-	# 					style_handler.write('{},BGC\n'.format(bgcName))
-	# 				if 'gamma:' in line:
-	# 					t = next(f).split()
-	# 					t = list(map(float, t))
-	# 					gamma = np.asarray(t)
-	# 					gamma = gamma/np.sum(gamma)
-	# 					for i in range(gamma.shape[0]):
-	# 						if (gamma[i]>(np.amax(gamma) - 0.03*np.amax(gamma))):
-	# 							file_handler_b.write('{},topic{},{}\n'.format(bgcName,(i+1),gamma[i]))
-	# 					break
-	# 			numFiles+=1
+		except:
+			print('This name does not exist.')
+	# This is necessary for the second directory. The one with the binary bgcs
+	numFiles = 0
+	bgcName = ""
+	for filename in glob.glob(os.path.join(bgc_path, '*.txt')):
+		try:
+			with open(filename, 'r') as f:
+				for line in f:
+					if 'name:' in line:
+						bgcName = line.split()[1]
+						style_handler.write('{},BGC\n'.format(bgcName))
+					if 'gamma:' in line:
+						t = next(f).split()
+						t = list(map(float, t))
+						gamma = np.asarray(t)
+						gamma = gamma/np.sum(gamma)
+						for i in range(gamma.shape[0]):
+							if (gamma[i]>(np.amax(gamma) - 0.03*np.amax(gamma))):
+								file_handler_b.write('{},topic{},{}\n'.format(bgcName,(i+1),gamma[i]))
+						break
+				numFiles+=1
 				
-	# 	except:
-	# 		print('This name does not exist.')
+		except:
+			print('This name does not exist.')
 
-	# for i in range(50):
-	# 	style_handler.write('topic{},topic\n'.format((i+1)))
+	for i in range(50):
+		style_handler.write('topic{},topic\n'.format((i+1)))
 
 
-	# print("The Thita process is done.")
+	print("The Thita process is done.")
 	print("Now is turn for the vita matrix.")
 
 	dictionary = {}
 	### Open the bgc dictionary and create a style with the genes ###
-	gene_path = r"/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/product_files/Gene_dictionary.txt"
+	directory = os.path.dirname(os.path.realpath(__file__))
+	gene_path = directory + "/product_files/Gene_dictionary.txt"
 	# try:
 	genes = open(gene_path, "r")
 	next(genes)
@@ -102,8 +103,8 @@ if __name__ == "__main__":
 # except:
 	# 	print("Dictionary, this name does not exist.")
 
-	binary_bgc_path = r"/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_objects_binary"
-	bgc_path = r"/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/lda_objetcs"
+	binary_bgc_path = directory + "/lda_objects_binary"
+	bgc_path = directory + "/lda_objects"
 
 	#############################
 	output_binary = 'bgc_topic_lda_binary_vita.csv'
@@ -128,7 +129,7 @@ if __name__ == "__main__":
 				if "[" in line:
 					key = int(line.split()[0])
 					gene = dictionary[key]
-					print(gene)
+					# print(gene)
 					style_handler.write('{},gene\n'.format(gene))
 					# this vector will hold the values of each row, and every time it sees a "[" it will reset.
 					vector_array = np.zeros((1,50))
@@ -154,17 +155,18 @@ if __name__ == "__main__":
 						vector_array = np.asarray(vector_list)
 						vector_array = vector_array/np.sum(vector_array)
 						for i in range(vector_array.shape[0]):
-							if (vector_array[i]>(np.amax(vector_array) - 0.005*np.amax(vector_array))):
+							if (vector_array[i]>(np.amax(vector_array))):
 								file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
 
 	# This is necessary for the second directory. The one with the binary bgcs
 	for filename in glob.glob(os.path.join(bgc_path, 'vita_loop_60.txt')):
 		with open(filename, 'r') as f:
+			next(f)
 			for line in f:
 				if "[" in line:
 					key = int(line.split()[0])
 					gene = dictionary[key]
-					print(gene)
+					# print(gene)
 					style_handler.write('{},gene\n'.format(gene))
 					# this vector will hold the values of each row, and every time it sees a "[" it will reset.
 					vector_array = np.zeros((1,50))
@@ -188,12 +190,15 @@ if __name__ == "__main__":
 								vector_list.append(float(temp[i]))
 
 						vector_array = np.asarray(vector_list)
-						vector_array = vector_array/np.sum(vector_array)
+						# vector_array = vector_array/np.sum(vector_array)
 						for i in range(vector_array.shape[0]):
-							if (vector_array[i]>(np.amax(vector_array) - 0.005*np.amax(vector_array))):
-								file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
+							vector_array[i]
+							if (vector_array[i]>(np.amax(vector_array))):
+								file_handler_b.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
+								# print("on.\n")
 
 
 	style_handler.close()
 	file_handler_a.close()
 	file_handler_b.close()
+	print("All done.")

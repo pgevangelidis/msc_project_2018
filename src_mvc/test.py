@@ -8,11 +8,22 @@ def logSpace(vector):
 
 if __name__ == "__main__":
 
+	def sumOverGenes(bgc_num, topic_num):
+		sum_log_vita = 0.0
+		for i in range(V):
+			sum_log_vita += np.log(vita[i, topic_num])*coo[bgc_num,i] + np.log(1 - vita[i, topic_num])*(1 - coo[bgc_num,i])
+		return sum_log_vita
+
+	def denominatorSumOverTopics(bgc_num):
+		denom_vector = np.zeros((1,kapa), dtype=float)
+		for i in range(kapa):
+			denom_vector[0,i] = np.log(pi[0,i]) + sumOverGenes(bgc_num, i)
+		return denom_vector
 	# beta = np.array([[0.2, 0.2, 0.6],[0.1, 0.1, 0.8],[0.3, 0.4, 0.3],[0.4, 0.2, 0.4],[0.1, 0.1, 0.9],[0.2, 0.7, 0.1]])
 	# qiou = np.zeros((3,3))
-	V = 10000
-	D = 900
-	kapa = 40
+	V = 100
+	D = 30
+	kapa = 10
 
 	vita = np.random.rand(V,kapa) # the genes will be 180 and the topics 10.
 	qiou = np.zeros((D,kapa))
@@ -37,21 +48,34 @@ if __name__ == "__main__":
 	loop = 0
 	while(flag != True):
 		np.seterr(all = "warn" )
+		# for i in range(qiou.shape[0]): # this is actually bgc 
+		# 	# prod_vector = np.zeros((1,10), dtype = float)
+		# 	sum_vector = np.zeros((1,kapa), dtype = float)
+		# 	for j in range(qiou.shape[1]): # this is the BGC corpus
+		# 		temp = ((vita[:,j])**(coo[i]))*((1 - vita[:,j])**(1 - coo[i]))
+		# 		sum_vector[0,j] = np.log(pi[0,j]) + np.sum(np.log(logSpace(temp)))
+		# 	amax = np.amax(sum_vector)
+		# 	prod_vector = sum_vector - amax # this is the maximum value of the vector.
+		# 	reduce_factor = amax + np.log(np.sum(np.exp(prod_vector)))
+		# 			# avoid zero values.
+		# 	for j in range(qiou.shape[1]):
+		# 		if np.exp(sum_vector[0,j] - reduce_factor) < 0.0001 :
+		# 			qiou[i][j] = 0.0001
+		# 		else:
+		# 			qiou[i][j] = np.exp(sum_vector[0,j] - reduce_factor)
+		# 	qiou[i] = qiou[i]/np.sum(qiou[i])
 		for i in range(qiou.shape[0]): # this is actually bgc 
-			# prod_vector = np.zeros((1,10), dtype = float)
-			sum_vector = np.zeros((1,kapa), dtype = float)
-			for j in range(qiou.shape[1]): # this is the BGC corpus
-				temp = ((vita[:,j])**(coo[i]))*((1 - vita[:,j])**(1 - coo[i]))
-				sum_vector[0,j] = np.log(pi[0,j]) + np.sum(np.log(logSpace(temp)))
-			amax = np.amax(sum_vector)
-			prod_vector = sum_vector - amax # this is the maximum value of the vector.
-			reduce_factor = amax + np.log(np.sum(np.exp(prod_vector)))
-					# avoid zero values.
-			for j in range(qiou.shape[1]):
-				if np.exp(sum_vector[0,j] - reduce_factor) < 0.0001 :
-					qiou[i][j] = 0.0001
-				else:
-					qiou[i][j] = np.exp(sum_vector[0,j] - reduce_factor)
+			try:
+				numerator = 0.0
+				denominator = 0.0
+				dvector = denominatorSumOverTopics(i)
+				for j in range(qiou.shape[1]): # this is the BGC corpus
+					numerator = np.log(pi[0,j]) + sumOverGenes(i,j)
+					denominator = np.log( np.amax(dvector) + np.sum(np.exp(dvector)) )
+					qiou[i][j] = np.exp(numerator - denominator)
+			except RuntimeWarning:
+				print("denominator min: {} max: {}".format(np.amin(denominator), np.amax(denominator)))
+
 			qiou[i] = qiou[i]/np.sum(qiou[i])
 
 		print("iter: {}\t qiou_min: {}".format(loop, np.amin(qiou)))

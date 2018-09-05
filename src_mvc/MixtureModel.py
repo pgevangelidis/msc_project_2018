@@ -115,27 +115,42 @@ class MixtureModel:
 
 		print('{}. Computation of {} is done.\nloop: {}, time: {}:{}:{}\n'.format(s, self.step, loop, hour, min, sec))
 
+	def sumOverGenes(self, bgc_num, topic_num):
+		sum_log_vita = 0.0
+		for i in range(self.vita.shape[0]):
+			sum_log_vita += np.log(self.vita[i, topic_num])*self.coo[bgc_num,i] + np.log(1 - self.vita[i, topic_num])*(1 - self.coo[bgc_num,i])
+		return sum_log_vita
+
+	def denominatorSumOverTopics(self, bgc_num):
+		denom_vector = np.zeros((1,self.kapa), dtype=float)
+		for i in range(self.kapa):
+			denom_vector[0,i] = np.log(self.pi[0,i]) + self.sumOverGenes(bgc_num, i)
+		return denom_vector
+	
+	#this equation return a scalar
+	def sumOverBGCs(self, gene, topic):
+		numerator = 0.0
+		denominator = 0.0
+		for i in range(self.qiou.shape[0]):
+			numerator += self.qiou[i][topic]*self.coo[i][gene]
+			denominator += self.qiou[i][topic]
+		return numerator/denominator
+
+
 	def MM_EStep(self):
 		# Updating the qiou
 		for i in range(self.qiou.shape[0]): # this is actually bgc 
 			try:
-				prod_vector = np.zeros((1,self.kapa), dtype = float)
-				sum_vector = np.zeros((1,self.kapa), dtype = float)
+				numerator = 0.0
+				denominator = 0.0
+				dvector = self.denominatorSumOverTopics(i)
 				for j in range(self.qiou.shape[1]): # this is the BGC corpus
-					temp = ((self.vita[:,j])**(self.coo[i]))*((1 - self.vita[:,j])**(1 - self.coo[i]))
-					sum_vector[0,j] = np.log(self.pi[0,j]) + np.sum(np.log(temp))
-				amax = np.amax(sum_vector)
-				prod_vector = sum_vector - amax # this is the maximum value of the vector.
-				# print("prod vector min {}\tprod vector max {}\tsum vector min {}\tsum vector max {}".format(np.amin(prod_vector), np.amax(prod_vector), np.amin(sum_vector), amax))
-				reduce_factor = amax + np.log(np.sum(np.exp(prod_vector)))
+					numerator = np.log(self.pi[0,j]) + self.sumOverGenes(i,j)
+					denominator = np.log( np.amax(dvector) + np.sum(np.exp(dvector)) )
+					self.qiou[i][j] = np.exp(numerator - denominator)
 			except RuntimeWarning:
-				print("reduce_factor min: {} max: {}".format(np.amin(prod_vector), np.amax(prod_vector)))
+				print("denominator min: {} max: {}".format(np.amin(denominator), np.amax(denominator)))
 
-			for j in range(self.qiou.shape[1]):
-				if np.exp(sum_vector[0,j] - reduce_factor) < 0.0001:
-					self.qiou[i][j] = 0.0001
-				else:
-					self.qiou[i][j] = np.exp(sum_vector[0,j] - reduce_factor)
 			self.qiou[i] = self.qiou[i]/np.sum(self.qiou[i])
 
 	def MM_MStep(self):
@@ -145,22 +160,12 @@ class MixtureModel:
 
 		for i in range(self.vita.shape[0]):
 			for j in range(self.qiou.shape[1]):
-				# the numerator
-				num_zero = self.qiou[:,j]*self.coo[:,i]
-				numerator = np.log(num_zero[num_zero != 0])
-				nmax = np.amax(numerator)
-				numer_max = numerator - nmax
-				num_factor = nmax + np.log(np.sum(np.exp(numer_max)))
-				# the denominator
-				denominator = np.log(self.qiou[:,j])
-				dmax = np.amax(denominator)
-				denom_max = denominator - dmax
-				reduce_factor = dmax + np.log(np.sum(np.exp(denom_max)))
-				# updating vita
-				if np.exp(num_factor - reduce_factor) < 0.0001:
-					self.vita[i,j] = 0.0001
-				else:
-					self.vita[i,j] = np.exp(num_factor - reduce_factor) 
+				self.vita[i][j] = self.sumOverBGCs(i,j)
+				# # updating vita
+				# if np.exp(num_factor - reduce_factor) < 0.0001:
+				# 	self.vita[i,j] = 0.0001
+				# else:
+				# 	self.vita[i,j] = np.exp(num_factor - reduce_factor) 
 
 		# update pi as well
 		for i in range(self.qiou.shape[0]):

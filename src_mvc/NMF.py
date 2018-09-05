@@ -14,9 +14,10 @@ class NMF_model:
         self.coordinates = []
         self.W = []
         self.H = []
-        # mac path
+        self.bgcDict = {} # contains the dictionaries for the bgc and gene
+        self.geneDict = {}
         directory = os.path.dirname(os.path.realpath(__file__))
-        self.path = directory + "/NMF_files/"
+        self.path = directory + "\\NMF_files\\"
         # self.path = r'/Users/pavlos/Documents/personal/msc_project_2018/src_mvc/NMF_files/'
         # windows path
         # self.path = r'C:\Users\user\Documents\msc_thesis_2018\msc_project_2018\src_mvc\msc_project_2018\src_mvc\NMF_files'
@@ -36,7 +37,9 @@ class NMF_model:
 
     def modelNMF(self, c):
 
-        self.coordinates = c
+        self.coordinates = c.coordinates
+        self.bgcDict = c.bgcDict
+        self.geneDict = c.geneDict
         sparse = self.setSparse()
         model = NMF(n_components=50, init='nndsvd', solver='cd')
         self.W = model.fit_transform(sparse)
@@ -77,8 +80,31 @@ class NMF_model:
         W_out.close()
         H_out.close()
 
+        ##### Cytoscape #####
+        W_file = os.path.join(self.path, 'W_file_cyto.txt')
+        H_file = os.path.join(self.path, 'H_file_cyto.txt')
+
+        W_out = open(W_file,'w')
+        H_out = open(H_file,'w')
+        ############# main code ################
+        wmax = np.amax(self.W)
+
+        for bgc in self.bgcDict.keys():
+            row = self.bgcDict[bgc]
+            for j in range(self.W.shape[1]):
+                if self.W[row][j] > (wmax*0.97):
+                    W_out.write("{},topic{},{}\n".format(bgc, j+1, self.W[row][j]))
+
+        hmax = np.amax(self.H)
+
+        for gene in self.geneDict.keys():
+            row = self.geneDict[gene]
+            for i in range(self.H.shape[1]):
+                if self.H[row][i] > (hmax*0.97):
+                    H_out.write("{},topic{},{}\n".format(gene, i+1, self.H[row][i]))
 
 
-        
+        W_out.close()
+        H_out.close()
 
         

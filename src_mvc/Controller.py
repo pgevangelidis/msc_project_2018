@@ -56,7 +56,7 @@ class Controller:
 			print('All set. Ready to proceed.\n')
 
 		if(mode==3):
-			self.nmf.modelNMF(self.dictionaries.coordinates)
+			self.nmf.modelNMF(self.dictionaries)
 
 		if(mode==4):
 			print('\nLDA original\n')
