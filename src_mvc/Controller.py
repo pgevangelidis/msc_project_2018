@@ -9,6 +9,7 @@ from MixtureModel import *
 from dirCheck import *
 from pickle_test import *
 from plots_v2 import *
+from binaryDatasetCheck import *
 
 class Controller:
 
@@ -54,6 +55,7 @@ class Controller:
 				self.genBank_obj.bgcList.append(bgc_obj)
 				self.dictionaries.setDictionaries(bgc_obj)
 			print('All set. Ready to proceed.\n')
+			print("bgc: {}".format(len(self.genBank_obj.bgcList)))
 
 		if(mode==3):
 			self.nmf.modelNMF(self.dictionaries)
@@ -90,6 +92,10 @@ class Controller:
 
 		if(mode==8):
 			self.exitCond = True
+
+		if(mode==9):
+			binarySet = BinaryCheck(self.genBank_obj.bgcList, self.dictionaries.geneDict)
+			binarySet.runCheck()
 
 
 

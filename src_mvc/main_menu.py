@@ -7,7 +7,7 @@
 
 #### packages/libraries/ etc
 from Bio import *
-from BGC import *
+from binaryBGC import *
 from BGC_Dictionary import *
 from LDAmodel import *
 from storeBGC import *

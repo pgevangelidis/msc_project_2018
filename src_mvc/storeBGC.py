@@ -1,5 +1,5 @@
 # This file will store to txt file all the information from each BGC
-from BGC import *
+from binaryBGC import *
 from LDAmodel import *
 import glob
 import os.path

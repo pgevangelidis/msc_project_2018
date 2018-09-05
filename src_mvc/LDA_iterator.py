@@ -10,7 +10,7 @@ class LDA_iterator:
 
 	def __init__(self, geneDict, lda_obj, binary):
 		self.iteration = 40 # I have picked 100 iteration hoping the LDA will merge before them
-		self.error = 0.03
+		self.error = 0.1
 		self.errorFlag = False
 		self.calcError = 0.0
 		self.calcError_pre = [1]

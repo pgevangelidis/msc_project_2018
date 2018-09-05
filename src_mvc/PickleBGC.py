@@ -1,5 +1,5 @@
 import pickle
-from BGC import *
+from binaryBGC import *
 
 class PickleBGC:
 

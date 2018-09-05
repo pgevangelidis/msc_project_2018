@@ -3,7 +3,7 @@
 # This class contains the LDA model
 import numpy as np
 import scipy.special
-from BGC import *
+from binaryBGC import *
 from BGC_Dictionary import *
 # from lb_check import *
 import copy
