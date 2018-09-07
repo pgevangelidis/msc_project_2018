@@ -81,18 +81,21 @@ class NMF_model:
         H_out.close()
 
         ##### Cytoscape #####
-        W_file = os.path.join(self.path, 'W_file_cyto.txt')
-        H_file = os.path.join(self.path, 'H_file_cyto.txt')
+        W_file = os.path.join(self.path, 'W_file_cyto.csv')
+        H_file = os.path.join(self.path, 'H_file_cyto.csv')
 
         W_out = open(W_file,'w')
         H_out = open(H_file,'w')
         ############# main code ################
         wmax = np.amax(self.W)
 
+        W_out.write('Gene,topic,threshold\n')
+        H_out.write('Gene,topic,threshold\n')
+
         for bgc in self.bgcDict.keys():
             row = self.bgcDict[bgc]
             for j in range(self.W.shape[1]):
-                if self.W[row][j] > (wmax*0.97):
+                if self.W[row][j] > (wmax*0.7):
                     W_out.write("{},topic{},{}\n".format(bgc, j+1, self.W[row][j]))
 
         hmax = np.amax(self.H)
@@ -100,7 +103,7 @@ class NMF_model:
         for gene in self.geneDict.keys():
             row = self.geneDict[gene]
             for i in range(self.H.shape[1]):
-                if self.H[row][i] > (hmax*0.97):
+                if self.H[row][i] > (hmax*0.7):
                     H_out.write("{},topic{},{}\n".format(gene, i+1, self.H[row][i]))
 
 

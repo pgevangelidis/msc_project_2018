@@ -14,33 +14,35 @@ if __name__ == '__main__':
 	qiou = np.zeros((3,3), dtype = float)
 	p = np.full((3,1), 1/3)
 	betaT = beta.transpose()
+	vector = np.zeros((1,50))
+	print(vector.shape[1])
 
-	print(betaT)
-	print(betaT.shape)
-	print(w.shape)
-	for j in range(w.shape[0]):
-		for i in range(betaT.shape[0]):
-			temp = p[i]*(betaT[i]**w[j])*(1 - betaT[i])**(1 - w[j])
-			qiou[i][j] = np.prod(temp)
+	# print(betaT)
+	# print(betaT.shape)
+	# print(w.shape)
+	# for j in range(w.shape[0]):
+	# 	for i in range(betaT.shape[0]):
+	# 		temp = p[i]*(betaT[i]**w[j])*(1 - betaT[i])**(1 - w[j])
+	# 		qiou[i][j] = np.prod(temp)
 
-	for i in range(qiou.shape[0]):
-		qiou[i] = qiou[i]/np.sum(qiou[i])
-		print(qiou[i])
+	# for i in range(qiou.shape[0]):
+	# 	qiou[i] = qiou[i]/np.sum(qiou[i])
+	# 	print(qiou[i])
 
-	num = np.zeros((1,3))
-	for i in range(w.shape[0]):
-		num += qiou[i]
-	print(num)
+	# num = np.zeros((1,3))
+	# for i in range(w.shape[0]):
+	# 	num += qiou[i]
+	# print(num)
 
-	wT = w.transpose()
-	print(wT)
-	# qiouT = qiou.transpose()
-	# print(qiouT)
+	# wT = w.transpose()
+	# print(wT)
+	# # qiouT = qiou.transpose()
+	# # print(qiouT)
 
-	beta = np.prod(wT, qiou)
-	print(beta)
+	# beta = np.prod(wT, qiou)
+	# print(beta)
 
-	print("Done")
+	# print("Done")
 	
 
 

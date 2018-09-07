@@ -48,7 +48,7 @@ if __name__ == "__main__":
 						gamma = np.asarray(t)
 						gamma = gamma/np.sum(gamma)
 						for i in range(gamma.shape[0]):
-							if (gamma[i]>(np.amax(gamma) - 0.03*np.amax(gamma))):
+							if (gamma[i]>(np.amax(gamma)*0.9)):
 								file_handler_a.write('{},topic{},{}\n'.format(bgcName,(i+1),gamma[i]))
 						break
 				numFiles+=1
@@ -64,14 +64,14 @@ if __name__ == "__main__":
 				for line in f:
 					if 'name:' in line:
 						bgcName = line.split()[1]
-						style_handler.write('{},BGC\n'.format(bgcName))
+						# style_handler.write('{},BGC\n'.format(bgcName))
 					if 'gamma:' in line:
 						t = next(f).split()
 						t = list(map(float, t))
 						gamma = np.asarray(t)
 						gamma = gamma/np.sum(gamma)
 						for i in range(gamma.shape[0]):
-							if (gamma[i]>(np.amax(gamma) - 0.03*np.amax(gamma))):
+							if (gamma[i]>(np.amax(gamma)*0.9)):
 								file_handler_b.write('{},topic{},{}\n'.format(bgcName,(i+1),gamma[i]))
 						break
 				numFiles+=1
@@ -99,9 +99,7 @@ if __name__ == "__main__":
 		temp_int = re.split(r"(\n)", temp_list.pop())[0]
 		#print(int(temp_int))
 		dictionary.update({int(temp_int) : temp_list[0]})
-		# print(dictionary)
-# except:
-	# 	print("Dictionary, this name does not exist.")
+
 
 	binary_bgc_path = directory + "/lda_objects_binary"
 	bgc_path = directory + "/lda_objects"
@@ -115,6 +113,8 @@ if __name__ == "__main__":
 	b_path = os.path.join(save_path, output_normal)
 	file_handler_b = open(b_path, 'w')
 
+	file_handler_a.write('Gene,topic,threshold\n')
+	file_handler_b.write('Gene,topic,threshold\n')
 	# loop through text files:
 	gene = ""
 	print('Processing...\nPlease wait...\n')
@@ -130,33 +130,35 @@ if __name__ == "__main__":
 					key = int(line.split()[0])
 					gene = dictionary[key]
 					# print(gene)
-					style_handler.write('{},gene\n'.format(gene))
+					# style_handler.write('{},gene\n'.format(gene))
 					# this vector will hold the values of each row, and every time it sees a "[" it will reset.
 					vector_array = np.zeros((1,50))
 					vector_list = []
 					# from this line I am interested for the second part
 					temp = re.split(r"[\[\t\r\n\]\s]", line)
-					for i in range(len(temp)):
+					for i in range(2,len(temp)):
 						if temp[i] != "":
 							vector_list.append(float(temp[i]))
-							# print(temp[i])
+							# print(len(temp[i]))
 				else:
 					temp = re.split(r"[\[\t\r\n\]\s]", line)
 					for i in range(len(temp)):
 						if temp[i] != "":
 							vector_list.append(float(temp[i]))
 							# print(temp[i])
-					if "]" in line:
-						temp = re.split(r"[\[\t\r\n\]\s]", line)
-						for i in range(len(temp)):
-							if temp[i] != "":
-								vector_list.append(float(temp[i]))
+				if "]" in line:
+				# 	temp = re.split(r"[\[\t\r\n\]\s]", line)
+				# 	for i in range(len(temp)):
+				# 		if temp[i] != "":
+				# 			vector_list.append(float(temp[i]))
+				# 			print(temp[i])
 
-						vector_array = np.asarray(vector_list)
-						vector_array = vector_array/np.sum(vector_array)
-						for i in range(vector_array.shape[0]):
-							if (vector_array[i]>(np.amax(vector_array))):
-								file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
+					# print(vector_list)
+					vector_array[0] = np.asarray(vector_list)
+					vector_array = vector_array/np.sum(vector_array)
+					for i in range(vector_array.shape[1]):
+						if (vector_array[0,i]>(np.amax(vector_array)*0.9)):
+							file_handler_a.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[0,i]))
 
 	# This is necessary for the second directory. The one with the binary bgcs
 	for filename in glob.glob(os.path.join(bgc_path, 'vita_loop_60.txt')):
@@ -169,11 +171,11 @@ if __name__ == "__main__":
 					# print(gene)
 					style_handler.write('{},gene\n'.format(gene))
 					# this vector will hold the values of each row, and every time it sees a "[" it will reset.
-					vector_array = np.zeros((1,50))
+					vector_array = np.zeros((1,50), dtype=float)
 					vector_list = []
 					# from this line I am interested for the second part
 					temp = re.split(r"[\[\t\r\n\]\s]", line)
-					for i in range(len(temp)):
+					for i in range(2,len(temp)):
 						if temp[i] != "":
 							vector_list.append(float(temp[i]))
 							# print(temp[i])
@@ -183,19 +185,18 @@ if __name__ == "__main__":
 						if temp[i] != "":
 							vector_list.append(float(temp[i]))
 							# print(temp[i])
-					if "]" in line:
-						temp = re.split(r"[\[\t\r\n\]\s]", line)
-						for i in range(len(temp)):
-							if temp[i] != "":
-								vector_list.append(float(temp[i]))
+				if "]" in line:
+					# temp = re.split(r"[\[\t\r\n\]\s]", line)
+					# for i in range(len(temp)):
+					# 	if temp[i] != "":
+					# 		vector_list.append(float(temp[i]))
 
-						vector_array = np.asarray(vector_list)
-						# vector_array = vector_array/np.sum(vector_array)
-						for i in range(vector_array.shape[0]):
-							vector_array[i]
-							if (vector_array[i]>(np.amax(vector_array))):
-								file_handler_b.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[i]))
-								# print("on.\n")
+					vector_array[0] = np.asarray(vector_list)
+					# vector_array = vector_array/np.sum(vector_array)
+					for i in range(vector_array.shape[1]):
+						if (vector_array[0][i]>(np.amax(vector_array)*0.7)):
+							file_handler_b.write('{},topic{},{}\n'.format(gene,(i+1),vector_array[0][i]))
+							# print("on.\n")
 
 
 	style_handler.close()
